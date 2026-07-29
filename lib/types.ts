@@ -152,3 +152,14 @@ export function priceRange(min: number | null, max: number | null) {
   if (min != null && max != null) return `$${min}–$${max}`;
   return `$${min ?? max}`;
 }
+
+// Privacy: creatives are shown to other people as "First L." (never a full name),
+// so they can't easily be searched up externally from their Co-op presence.
+// Only the account owner sees their own full name (nav, settings, edit forms).
+export function displayNameFor(fullName: string | null | undefined): string {
+  const name = (fullName ?? '').trim();
+  if (!name) return 'Creative';
+  const parts = name.split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+}

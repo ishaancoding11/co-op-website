@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, NoFeeNote } from '@/components/ui';
 import { AgreementForm } from './agreement-form';
-import type { Package } from '@/lib/types';
+import { displayNameFor, type Package } from '@/lib/types';
 
 export default async function NewAgreement({ searchParams }: { searchParams: Promise<{ match?: string }> }) {
   const { match } = await searchParams;
@@ -18,7 +18,7 @@ export default async function NewAgreement({ searchParams }: { searchParams: Pro
   const { data: packages } = await supabase.from('packages').select('*').eq('creative_id', m.creative_id).order('price');
   const isBiz = m.business_id === userId;
   const otherName = isBiz
-    ? ((m.users as { display_name: string | null } | null)?.display_name ?? 'the creative')
+    ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
     : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'the business');
 
   return (

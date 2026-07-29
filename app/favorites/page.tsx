@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, Avatar, EmptyState, Tag, StatusBadge } from '@/components/ui';
-import { CATEGORY_LABELS, priceRange, type CreativeCategory } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 
 export default async function Favorites() {
   const { userId, supabase } = await getViewer();
@@ -27,7 +27,7 @@ export default async function Favorites() {
             <div className="space-y-3">
               {creatives.map(f => {
                 const cp = f.creative_profiles as { neighborhood: string | null; categories: CreativeCategory[]; avatar_url: string | null; rate_min: number | null; rate_max: number | null; users: { display_name: string | null } | null } | null;
-                const name = cp?.users?.display_name ?? 'Creative';
+                const name = displayNameFor(cp?.users?.display_name);
                 return (
                   <Link key={f.id} href={`/creatives/${f.saved_creative_id}`} className="block">
                     <Card className="p-4 flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">

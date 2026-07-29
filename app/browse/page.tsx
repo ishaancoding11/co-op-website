@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { Card, Tag, Avatar, Rating, EmptyState, inputCls, LocationSelect } from '@/components/ui';
 import { RangeSlider } from '@/components/range-slider';
-import { ALL_CATEGORIES, CATEGORY_LABELS, priceRange, type CreativeCategory } from '@/lib/types';
+import { ALL_CATEGORIES, CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 
 export default async function Browse({ searchParams }: {
   searchParams: Promise<{ category?: string; neighborhood?: string; price_min?: string; price_max?: string; min_rating?: string; q?: string }>;
@@ -75,7 +75,7 @@ export default async function Browse({ searchParams }: {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           {visible.map(c => {
-            const name = (c.users as { display_name: string | null } | null)?.display_name ?? 'Creative';
+            const name = displayNameFor((c.users as { display_name: string | null } | null)?.display_name);
             return (
               <Link key={c.user_id} href={`/creatives/${c.user_id}`} className="group">
                 <Card className="overflow-hidden hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">

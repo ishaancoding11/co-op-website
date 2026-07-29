@@ -33,5 +33,7 @@ export const createClient = (request: NextRequest) => {
     },
   );
 
-  return supabaseResponse
+  // Return a getter (not a snapshot) — setAll above reassigns supabaseResponse,
+  // e.g. when supabase.auth.getUser() refreshes the session.
+  return { supabase, getResponse: () => supabaseResponse };
 };

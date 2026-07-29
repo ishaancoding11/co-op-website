@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { creativeLikeBusiness } from '@/lib/actions';
 import { Card, Avatar, Tag, VerifiedBadge, Rating, StatusBadge } from '@/components/ui';
-import { CATEGORY_LABELS, priceRange, type CreativeCategory, type Job, type Review } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory, type Job, type Review } from '@/lib/types';
 import { ReportBlock } from '@/components/report-block';
 
 export default async function BusinessPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,7 +76,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
           {(reviews as (Review & { users: { display_name: string | null } | null })[]).map(r => (
             <Card key={r.id} className="p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{r.users?.display_name ?? 'A creative'}</p>
+                <p className="text-sm font-medium">{r.users?.display_name ? displayNameFor(r.users.display_name) : 'A creative'}</p>
                 <Rating value={r.stars} />
               </div>
               {r.body && <p className="text-sm text-muted mt-1.5">{r.body}</p>}

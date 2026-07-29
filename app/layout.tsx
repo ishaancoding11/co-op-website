@@ -6,9 +6,23 @@ import { Nav } from "@/components/nav";
 const display = Fraunces({ variable: "--font-display", subsets: ["latin"] });
 const body = Inter({ variable: "--font-body", subsets: ["latin"] });
 
+const APP_DESCRIPTION =
+  "Co-op is the marketplace that connects small businesses with local freelance creatives — photographers, designers, videographers, and more — for paid work. Swipe to discover, match, and book directly. No platform fees, ever.";
+
 export const metadata: Metadata = {
   title: "Co-op — local creatives × small businesses",
-  description: "Newport Beach & Corona del Mar's marketplace connecting small businesses with nearby freelance creatives. No fees, ever.",
+  description: APP_DESCRIPTION,
+  openGraph: {
+    title: "Co-op — local creatives × small businesses",
+    description: APP_DESCRIPTION,
+    siteName: "Co-op",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Co-op — local creatives × small businesses",
+    description: APP_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

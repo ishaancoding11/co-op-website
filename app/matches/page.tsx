@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, Avatar, EmptyState, LinkButton, Tag, VerifiedBadge } from '@/components/ui';
+import { displayNameFor } from '@/lib/types';
 
 export default async function Matches() {
   const { userId, activeRole, supabase } = await getViewer();
@@ -31,7 +32,7 @@ export default async function Matches() {
           {matches.map(m => {
             const isBiz = m.business_id === userId;
             const otherName = isBiz
-              ? ((m.users as { display_name: string | null } | null)?.display_name ?? 'Creative')
+              ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
               : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
             const verified = !isBiz && (m.business_profiles as { is_verified: boolean } | null)?.is_verified;
             const last = (lastMsgs ?? []).find(x => x.match_id === m.id);

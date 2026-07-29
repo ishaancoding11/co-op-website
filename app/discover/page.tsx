@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { EmptyState, LinkButton } from '@/components/ui';
 import { SwipeDeck, type DeckCard } from './swipe-deck';
-import { CATEGORY_LABELS, priceRange, type CreativeCategory } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 
 export default async function Discover() {
   const { userId, business, supabase } = await getViewer();
@@ -29,7 +29,7 @@ export default async function Discover() {
     const hero = (portfolios ?? []).find(p => p.creative_id === c.user_id && p.media_type === 'image' && p.media_url);
     return {
       id: c.user_id,
-      name: (c.users as { display_name: string | null } | null)?.display_name ?? 'Creative',
+      name: displayNameFor((c.users as { display_name: string | null } | null)?.display_name),
       categories: (c.categories as CreativeCategory[]).map(x => CATEGORY_LABELS[x]),
       neighborhood: c.neighborhood,
       bio: c.bio,

@@ -4,7 +4,7 @@ import { getViewer } from '@/lib/auth';
 import { markComplete, updateAgreementStatus } from '@/lib/actions';
 import { Card, StatusBadge, NoFeeNote, LinkButton } from '@/components/ui';
 import { ReviewForm } from './review-form';
-import type { Review } from '@/lib/types';
+import { displayNameFor, type Review } from '@/lib/types';
 
 export default async function AgreementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +19,7 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
   const isBiz = a.business_id === userId;
   const otherId = isBiz ? a.creative_id : a.business_id;
   const otherName = isBiz
-    ? ((a.users as { display_name: string | null } | null)?.display_name ?? 'Creative')
+    ? displayNameFor((a.users as { display_name: string | null } | null)?.display_name)
     : ((a.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
   const iCompleted = isBiz ? !!a.completed_by_business_at : !!a.completed_by_creative_at;
   const theyCompleted = isBiz ? !!a.completed_by_creative_at : !!a.completed_by_business_at;

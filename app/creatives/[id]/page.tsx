@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { businessAct, toggleFavorite } from '@/lib/actions';
 import { Card, Tag, Avatar, Rating, LinkButton, NoFeeNote, AvailabilityStrip } from '@/components/ui';
-import { CATEGORY_LABELS, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
 import { ReportBlock } from '@/components/report-block';
 
 export default async function CreativeProfile({ params }: { params: Promise<{ id: string }> }) {
@@ -11,7 +11,9 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
 
   const { data: c } = await supabase.from('creative_profiles').select('*, users(display_name)').eq('user_id', id).maybeSingle();
   if (!c) notFound();
-  const name = (c.users as { display_name: string | null } | null)?.display_name ?? 'Creative';
+  const fullName = (c.users as { display_name: string | null } | null)?.display_name ?? 'Creative';
+  // Privacy: only the owner sees their own full name; everyone else sees "First L."
+  const name = userId === id ? fullName : displayNameFor(fullName);
 
   const [{ data: portfolio }, { data: packages }, { data: reviews }, { data: musician }, { data: fav }] = await Promise.all([
     supabase.from('portfolio_items').select('*').eq('creative_id', id).eq('is_hidden', false).order('created_at', { ascending: false }),

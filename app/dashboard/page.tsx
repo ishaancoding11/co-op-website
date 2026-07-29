@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, StatusBadge, EmptyState, LinkButton } from '@/components/ui';
+import { displayNameFor } from '@/lib/types';
 
 export default async function Dashboard() {
   const { userId, activeRole, supabase } = await getViewer();
@@ -18,7 +19,7 @@ export default async function Dashboard() {
   const Row = ({ a }: { a: NonNullable<typeof agreements>[number] }) => {
     const isBiz = a.business_id === userId;
     const otherName = isBiz
-      ? ((a.users as { display_name: string | null } | null)?.display_name ?? 'Creative')
+      ? displayNameFor((a.users as { display_name: string | null } | null)?.display_name)
       : ((a.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
     const needsMe = (a.status === 'accepted' || a.status === 'in_progress') && !(isBiz ? a.completed_by_business_at : a.completed_by_creative_at) && (isBiz ? a.completed_by_creative_at : a.completed_by_business_at);
     return (

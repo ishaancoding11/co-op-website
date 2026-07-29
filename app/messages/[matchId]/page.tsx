@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { VerifiedBadge, LinkButton } from '@/components/ui';
+import { displayNameFor } from '@/lib/types';
 import { Thread } from './thread';
 
 export default async function MessagePage({ params }: { params: Promise<{ matchId: string }> }) {
@@ -17,7 +18,7 @@ export default async function MessagePage({ params }: { params: Promise<{ matchI
   const isBiz = m.business_id === userId;
   const otherId = isBiz ? m.creative_id : m.business_id;
   const otherName = isBiz
-    ? ((m.users as { display_name: string | null } | null)?.display_name ?? 'Creative')
+    ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
     : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
   const verified = !isBiz && (m.business_profiles as { is_verified: boolean } | null)?.is_verified;
 

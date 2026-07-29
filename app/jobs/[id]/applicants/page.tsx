@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { setApplicationStatus } from '@/lib/actions';
 import { Card, Avatar, StatusBadge, Rating, EmptyState, LinkButton, Tag } from '@/components/ui';
-import { CATEGORY_LABELS, type CreativeCategory } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, type CreativeCategory } from '@/lib/types';
 
 export default async function Applicants({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,7 +38,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
         <div className="space-y-3 mt-6">
           {apps.map(a => {
             const cp = a.creative_profiles as { neighborhood: string | null; categories: CreativeCategory[]; avatar_url: string | null } | null;
-            const name = (a.users as { display_name: string | null } | null)?.display_name ?? 'Creative';
+            const name = displayNameFor((a.users as { display_name: string | null } | null)?.display_name);
             const rs = (reviews ?? []).filter(r => r.reviewee_id === a.creative_id);
             const rating = rs.length ? rs.reduce((s, r) => s + r.stars, 0) / rs.length : null;
             return (
