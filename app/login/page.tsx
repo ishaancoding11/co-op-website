@@ -13,7 +13,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <div className="mt-6">
           <GoogleButton role={role} next={next} />
         </div>
-        <p className="text-xs text-muted mt-6">One account works for both sides — you can add a creative or business profile anytime.</p>
+        <p className="text-xs text-muted mt-6">Your account is either a creative or a business — pick the side that fits, it&rsquo;s set at signup.</p>
       </Card>
     </div>
   );

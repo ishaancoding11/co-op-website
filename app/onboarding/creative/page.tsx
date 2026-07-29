@@ -1,15 +1,18 @@
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { saveCreativeProfile } from '@/lib/actions';
-import { Card, Field, inputCls, LocationSelect } from '@/components/ui';
+import { Card, Field, inputCls } from '@/components/ui';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 import { CategoryPicker } from './category-picker';
 import { RangeSlider } from '@/components/range-slider';
 import { DayPicker } from '@/components/day-picker';
+import { LocationField } from '@/components/location-field';
 
 export default async function CreativeOnboarding() {
-  const { userId, creative } = await getViewer();
+  const { userId, creative, business } = await getViewer();
   if (!userId) redirect('/login?role=creative');
+  // Roles are locked at signup: an account with a business profile can't add a creative one.
+  if (business && !creative) redirect('/browse');
 
   return (
     <div className="py-10 max-w-xl mx-auto">
@@ -24,7 +27,7 @@ export default async function CreativeOnboarding() {
             <textarea name="bio" rows={3} className={inputCls} defaultValue={creative?.bio ?? ''} placeholder="What you make, and what makes you worth booking." />
           </Field>
           <Field label="Where are you based?">
-            <LocationSelect defaultValue={creative?.neighborhood} />
+            <LocationField initial={creative?.neighborhood} />
           </Field>
           <Field label="Rate range" hint="Drag both handles — what a typical project runs, low to high.">
             <RangeSlider nameMin="rate_min" nameMax="rate_max" label="rate" initialMin={creative?.rate_min} initialMax={creative?.rate_max} />

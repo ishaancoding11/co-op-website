@@ -48,7 +48,7 @@ export function Thread({ matchId, userId, initial, otherName }: {
     <>
       <div className="flex-1 overflow-y-auto py-4 space-y-2" role="log" aria-label={`Conversation with ${otherName}`}>
         {messages.length === 0 && (
-          <p className="text-center text-sm text-muted py-10">You matched — break the ice 🌊</p>
+          <p className="text-center text-sm text-muted py-10">You matched — break the ice</p>
         )}
         {messages.map(m => (
           <div key={m.id} className={`flex ${m.sender_id === userId ? 'justify-end' : 'justify-start'}`}>

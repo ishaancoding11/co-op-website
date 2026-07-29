@@ -39,6 +39,30 @@ export const LOCATION_GROUPS: Record<string, string[]> = {
 
 export const NEIGHBORHOODS = Object.values(LOCATION_GROUPS).flat();
 
+// Approximate centroids for snapping browser geolocation to the nearest city.
+// Soft convenience signal only — never used for verification.
+export const CITY_COORDS: Record<string, [number, number]> = {
+  'Newport Beach': [33.6189, -117.9298], 'Costa Mesa': [33.6412, -117.9187],
+  Irvine: [33.6846, -117.8265], 'Laguna Beach': [33.5427, -117.7854],
+  'Huntington Beach': [33.6595, -117.9988], 'Dana Point': [33.4672, -117.6981],
+  'San Clemente': [33.427, -117.612], Tustin: [33.7458, -117.8261],
+  Anaheim: [33.8366, -117.9143], Fullerton: [33.8704, -117.9242],
+  'Los Angeles': [34.0522, -118.2437], 'Santa Monica': [34.0195, -118.4912],
+  'Culver City': [34.0211, -118.3965], 'West Hollywood': [34.09, -118.3617],
+  Pasadena: [34.1478, -118.1445], 'Long Beach': [33.7701, -118.1937],
+  'Manhattan Beach': [33.8847, -118.4109],
+  'San Diego': [32.7157, -117.1611], Encinitas: [33.037, -117.292],
+  Carlsbad: [33.1581, -117.3506], Oceanside: [33.1959, -117.3795], 'Del Mar': [32.9595, -117.2653],
+  'San Francisco': [37.7749, -122.4194], Oakland: [37.8044, -122.2712],
+  Berkeley: [37.8715, -122.273], 'San Jose': [37.3382, -121.8863],
+  'Palo Alto': [37.4419, -122.143], 'Mountain View': [37.3861, -122.0839],
+  'Marin County': [38.0834, -122.7633], 'Walnut Creek': [37.9101, -122.0652],
+  'Santa Cruz': [36.9741, -122.0308],
+  Sacramento: [38.5816, -121.4944], Fresno: [36.7378, -119.7871],
+  'Santa Barbara': [34.4208, -119.6982], 'San Luis Obispo': [35.2828, -120.6596],
+  Monterey: [36.6002, -121.8947],
+};
+
 export const WEEKDAYS = [
   { key: 'mon', label: 'Mon' }, { key: 'tue', label: 'Tue' }, { key: 'wed', label: 'Wed' },
   { key: 'thu', label: 'Thu' }, { key: 'fri', label: 'Fri' }, { key: 'sat', label: 'Sat' },
@@ -57,7 +81,7 @@ export type CreativeProfile = {
 
 export type BusinessProfile = {
   user_id: string; business_name: string; category: string | null; neighborhood: string | null;
-  needs: CreativeCategory[]; budget_band: string | null;
+  needs: CreativeCategory[]; needs_description?: string | null; budget_band: string | null;
   budget_min?: number | null; budget_max?: number | null;
   brand_vibe_tags: string[] | null;
   logo_url: string | null; verification_email: string | null;

@@ -23,6 +23,14 @@
 ## V2 / out of scope (deliberate)
 - Optional zero-fee pass-through payments (schema stub only), subscriptions/premium tiers (future monetization — never per-transaction fees), deeper identity verification, geolocation/maps, push notifications, admin/moderation dashboard (reports are data-capture only, review via Supabase dashboard), dispute resolution, "review passed profiles" screen, response-time auto-computation from message latency.
 
+## Iteration 3 decisions (2026-07-24)
+- **Roles locked at signup** (item 9): enforced in three layers — UI (no create/switch paths), route guards (onboarding + auth callback redirect to the existing role's home), and DB trigger `enforce_single_role()` (0007). Existing dual-role accounts keep both profiles; the lock applies to *adding* a second role.
+- **Account deletion** (item 8): `delete_account()` security-definer RPC deletes the auth user; FK cascades wipe all app rows. Uploaded storage files are NOT auto-deleted (no FK from storage.objects) — V2 cleanup job.
+- **Signup gate** (item 3): non-dismissable by design, every page, scroll-triggered; exempt on /login, /verify/*, /auth/* so signup itself isn't blocked.
+- **Business "needs"** (item 2): free-text `needs_description` replaces the category-array picker in the form; old `needs` column kept for existing rows (display falls back to it).
+- **Geolocation** (item 11): browser permission → nearest-city snap via hardcoded CITY_COORDS (no external geocoding API); lat/lng stored as soft signal only.
+- **Role homes**: business = /browse (logo + landing redirect), creative = /jobs. Distinct nav shells per role (item 10).
+
 ## Operational
 - Migration: `supabase/migrations/0001_init.sql` — run in Supabase SQL editor.
 - Seed: `supabase/seed.sql` — demo creatives/businesses/jobs (inserts demo rows into auth.users; dev only).

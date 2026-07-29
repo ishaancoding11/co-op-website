@@ -88,7 +88,9 @@ export function StatusBadge({ status }: { status: string }) {
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
     <div className="text-center py-16 px-6">
-      <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center text-2xl" aria-hidden>🌊</div>
+      <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center" aria-hidden>
+        <img src="/coop-logo-full.svg" alt="" width={34} height={28} />
+      </div>
       <h2 className="text-lg font-semibold">{title}</h2>
       {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}
       {action && <div className="mt-5">{action}</div>}
@@ -115,6 +117,29 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export const inputCls = 'w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-sm placeholder:text-muted/70 focus:border-accent focus:outline-none';
+
+// ===== SVG icons (stroke inherits currentColor; sized for the nav) =====
+function iconProps(size: number) {
+  return { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+}
+export function IconHeart({ size = 20 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><path d="M19.5 12.6 12 20l-7.5-7.4a5 5 0 1 1 7.1-7 .5.5 0 0 0 .8 0 5 5 0 1 1 7.1 7Z"/></svg>;
+}
+export function IconBell({ size = 20 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>;
+}
+export function IconGear({ size = 20 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>;
+}
+export function IconSearch({ size = 18 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>;
+}
+export function IconPin({ size = 16 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>;
+}
+export function IconPlus({ size = 16 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><path d="M12 5v14M5 12h14"/></svg>;
+}
 
 export function LocationSelect({ name = 'neighborhood', defaultValue, allowAny = false, anyLabel = 'All locations', className = '', ariaLabel }: {
   name?: string; defaultValue?: string | null; allowAny?: boolean; anyLabel?: string; className?: string; ariaLabel?: string;

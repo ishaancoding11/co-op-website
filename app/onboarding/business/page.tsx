@@ -1,14 +1,15 @@
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { saveBusinessProfile } from '@/lib/actions';
-import { Card, Field, inputCls, LocationSelect } from '@/components/ui';
-import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
-import { CategoryPicker } from '../creative/category-picker';
+import { Card, Field, inputCls } from '@/components/ui';
 import { RangeSlider } from '@/components/range-slider';
+import { LocationField } from '@/components/location-field';
 
 export default async function BusinessOnboarding() {
-  const { userId, business } = await getViewer();
+  const { userId, business, creative } = await getViewer();
   if (!userId) redirect('/login?role=business');
+  // Roles are locked at signup: an account with a creative profile can't add a business one.
+  if (creative && !business) redirect('/jobs');
 
   return (
     <div className="py-10 max-w-xl mx-auto">
@@ -19,12 +20,14 @@ export default async function BusinessOnboarding() {
           <Field label="Business name"><input required name="business_name" className={inputCls} defaultValue={business?.business_name ?? ''} /></Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Type"><input name="category" className={inputCls} defaultValue={business?.category ?? ''} placeholder="Coffee shop, salon…" /></Field>
-            <Field label="Location">
-              <LocationSelect defaultValue={business?.neighborhood} />
+            <Field label="City">
+              <LocationField initial={business?.neighborhood} />
             </Field>
           </div>
-          <Field label="What do you usually need?">
-            <CategoryPicker all={ALL_CATEGORIES} labels={CATEGORY_LABELS} initial={business?.needs ?? []} name="needs" />
+          <Field label="What kind of creative work do you usually need?" hint="In your own words — photos for a menu launch, reels, a mural, live music…">
+            <textarea name="needs_description" rows={3} className={inputCls}
+              defaultValue={business?.needs_description ?? ''}
+              placeholder="e.g. We refresh our menu photos every season and want short reels for Instagram." />
           </Field>
           <Field label="Typical budget per project" hint="Drag both handles to set your usual range.">
             <RangeSlider nameMin="budget_min" nameMax="budget_max" label="budget" initialMin={business?.budget_min} initialMax={business?.budget_max} />

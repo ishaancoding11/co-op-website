@@ -21,13 +21,18 @@ export async function GET(request: NextRequest) {
     supabase.from('business_profiles').select('user_id').eq('user_id', user.id).maybeSingle(),
   ]);
 
+  // Roles are locked at signup: an existing profile always wins over the
+  // requested role param, so nobody can onboard into the other side.
   let dest = '/';
-  if (role === 'creative') dest = creative ? '/jobs' : '/onboarding/creative';
-  else if (role === 'business') dest = business ? '/discover' : '/onboarding/business';
-  else if (creative) dest = '/jobs';
-  else if (business) dest = '/discover';
+  let effectiveRole = role;
+  if (creative) { dest = '/jobs'; effectiveRole = 'creative'; }
+  else if (business) { dest = '/browse'; effectiveRole = 'business'; }
+  else if (role === 'creative') dest = '/onboarding/creative';
+  else if (role === 'business') dest = '/onboarding/business';
 
   const res = NextResponse.redirect(new URL(dest, url.origin));
-  if (role === 'creative' || role === 'business') res.cookies.set('coop_role', role, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+  if (effectiveRole === 'creative' || effectiveRole === 'business') {
+    res.cookies.set('coop_role', effectiveRole, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+  }
   return res;
 }

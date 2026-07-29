@@ -27,12 +27,17 @@ export async function setRole(role: 'creative' | 'business') {
 }
 
 export async function chooseRole(role: 'creative' | 'business') {
-  await setRole(role);
   const { user, supabase } = await db();
-  if (!user) redirect(`/login?role=${role}`);
-  const table = role === 'creative' ? 'creative_profiles' : 'business_profiles';
-  const { data } = await supabase.from(table).select('user_id').eq('user_id', user.id).maybeSingle();
-  redirect(data ? (role === 'creative' ? '/jobs' : '/discover') : `/onboarding/${role}`);
+  if (!user) { await setRole(role); redirect(`/login?role=${role}`); }
+  const [{ data: creative }, { data: business }] = await Promise.all([
+    supabase.from('creative_profiles').select('user_id').eq('user_id', user.id).maybeSingle(),
+    supabase.from('business_profiles').select('user_id').eq('user_id', user.id).maybeSingle(),
+  ]);
+  // Roles are locked at signup — an existing profile decides the account's side for good.
+  if (creative) { await setRole('creative'); redirect('/jobs'); }
+  if (business) { await setRole('business'); redirect('/browse'); }
+  await setRole(role);
+  redirect(`/onboarding/${role}`);
 }
 
 // ===== Profiles =====
@@ -49,12 +54,14 @@ export async function saveCreativeProfile(formData: FormData) {
     rate_max: formData.get('rate_max') ? Number(formData.get('rate_max')) : null,
     availability: (formData.get('availability') as string) || null,
     available_days: formData.getAll('available_days') as string[],
+    latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
+    longitude: formData.get('longitude') ? Number(formData.get('longitude')) : null,
     is_public: formData.get('is_public') !== 'false',
   };
   let { error } = await supabase.from('creative_profiles').upsert(row);
-  if (error?.code === 'PGRST204' || error?.message.includes('available_days')) {
-    // 0003 migration not applied yet — save everything else
-    delete row.available_days;
+  if (error?.code === 'PGRST204') {
+    // A newer column's migration hasn't been applied yet — save everything else
+    delete row.available_days; delete row.latitude; delete row.longitude;
     ({ error } = await supabase.from('creative_profiles').upsert(row));
   }
   if (error) throw new Error(error.message);
@@ -80,14 +87,17 @@ export async function saveBusinessProfile(formData: FormData) {
     business_name: (formData.get('business_name') as string) || 'My business',
     category: (formData.get('category') as string) || null,
     neighborhood: (formData.get('neighborhood') as string) || null,
-    needs: formData.getAll('needs') as CreativeCategory[],
+    needs_description: (formData.get('needs_description') as string) || null,
     budget_min: budgetMin, budget_max: budgetMax, budget_band: budgetBand,
+    latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
+    longitude: formData.get('longitude') ? Number(formData.get('longitude')) : null,
     brand_vibe_tags: ((formData.get('brand_vibe_tags') as string) || '').split(',').map(s => s.trim()).filter(Boolean),
   };
   let { error } = await supabase.from('business_profiles').upsert(row);
-  if (error?.code === 'PGRST204' || error?.message.includes('budget_min')) {
-    // 0006 migration not applied yet — fall back to the legacy band only
-    delete row.budget_min; delete row.budget_max;
+  if (error?.code === 'PGRST204') {
+    // A newer column's migration hasn't been applied yet — fall back to base columns
+    delete row.budget_min; delete row.budget_max; delete row.needs_description;
+    delete row.latitude; delete row.longitude;
     ({ error } = await supabase.from('business_profiles').upsert(row));
   }
   if (error) throw new Error(error.message);
@@ -370,6 +380,18 @@ export async function blockUser(blockedUserId: string, path: string) {
 
 export async function signOut() {
   const { supabase } = await db();
+  await supabase.auth.signOut();
+  redirect('/');
+}
+
+export async function deleteAccount(prev: unknown, formData: FormData): Promise<{ error?: string }> {
+  const { supabase, user } = await db();
+  if (!user) redirect('/login');
+  if ((formData.get('confirmation') as string)?.trim().toUpperCase() !== 'DELETE') {
+    return { error: 'Type DELETE to confirm.' };
+  }
+  const { error } = await supabase.rpc('delete_account');
+  if (error) return { error: 'Could not delete account: ' + error.message };
   await supabase.auth.signOut();
   redirect('/');
 }

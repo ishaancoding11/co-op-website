@@ -43,7 +43,7 @@ export default async function Matches() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold flex items-center gap-1.5">{otherName} {verified && <VerifiedBadge small />}</p>
                     <p className="text-xs text-muted truncate">
-                      {last ? last.body : (m.jobs as { title: string } | null)?.title ? `Matched via "${(m.jobs as { title: string }).title}"` : 'Say hi 👋'}
+                      {last ? last.body : (m.jobs as { title: string } | null)?.title ? `Matched via "${(m.jobs as { title: string }).title}"` : 'Say hi'}
                     </p>
                   </div>
                   {unread && <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-label="Unread messages" />}

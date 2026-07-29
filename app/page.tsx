@@ -8,12 +8,12 @@ export default async function Landing() {
   // Signed-in users land on their discovery surface, not the marketing page.
   const { userId, creative, business, activeRole } = await getViewer();
   if (userId && (creative || business)) {
-    redirect(activeRole === 'business' ? '/discover' : '/jobs');
+    redirect(activeRole === 'business' ? '/browse' : '/jobs');
   }
   return (
     <div className="py-12 md:py-20">
       <div className="text-center max-w-2xl mx-auto">
-        <p className="text-xs tracking-[0.25em] uppercase text-accent font-semibold">Newport Beach · Corona del Mar</p>
+        <p className="text-xs tracking-[0.25em] uppercase text-accent font-semibold">Find your local creative match.</p>
         <h1 className="font-display text-4xl md:text-6xl mt-4 leading-[1.05]">
           Local creatives.<br />Local businesses.<br /><em className="text-sea not-italic">One swipe apart.</em>
         </h1>
@@ -41,9 +41,17 @@ export default async function Landing() {
         </Card>
       </div>
 
-      <p className="text-center mt-10 text-sm text-muted">
-        Just looking? <Link href="/browse" className="underline underline-offset-2 text-foreground">Browse local creatives</Link> — no account needed.
-      </p>
+      <div className="max-w-3xl mx-auto mt-10 text-center">
+        <p className="text-sm text-muted mb-3">Just looking? No account needed:</p>
+        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+          <Link href="/browse" className="rounded-full border border-line bg-card py-3 text-sm font-medium hover:border-accent hover:text-accent transition-colors">
+            Browse creatives
+          </Link>
+          <Link href="/jobs" className="rounded-full border border-line bg-card py-3 text-sm font-medium hover:border-sea hover:text-sea transition-colors">
+            Browse jobs
+          </Link>
+        </div>
+      </div>
       <div className="text-center mt-16 grid grid-cols-3 max-w-lg mx-auto text-sm">
         <div><p className="font-display text-2xl">0%</p><p className="text-muted text-xs mt-1">platform fees</p></div>
         <div><p className="font-display text-2xl">Local</p><p className="text-muted text-xs mt-1">your neighborhood only</p></div>

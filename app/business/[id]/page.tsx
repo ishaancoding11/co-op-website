@@ -36,9 +36,11 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
             <Rating value={rating} count={reviews?.length || undefined} />
             {(b.brand_vibe_tags ?? []).map((t: string) => <Tag key={t}>{t}</Tag>)}
           </div>
-          {(b.needs as CreativeCategory[])?.length > 0 && (
+          {b.needs_description ? (
+            <p className="text-sm text-muted mt-3">Usually looking for: {b.needs_description}</p>
+          ) : (b.needs as CreativeCategory[])?.length > 0 ? (
             <p className="text-sm text-muted mt-3">Usually looking for: {(b.needs as CreativeCategory[]).map(n => CATEGORY_LABELS[n]).join(', ')}</p>
-          )}
+          ) : null}
         </div>
       </div>
 

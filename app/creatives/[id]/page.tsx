@@ -120,7 +120,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
             ))}
           </div>
         ) : (
-          <p className="text-center text-sm text-muted py-12">No pieces yet 🌊</p>
+          <p className="text-center text-sm text-muted py-12">No pieces yet</p>
         )}
       </section>
 

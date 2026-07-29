@@ -33,7 +33,7 @@ export function SwipeDeck({ cards }: { cards: DeckCard[] }) {
     <div className="relative mx-auto w-full max-w-sm" style={{ height: 560 }}>
       {!current && (
         <div className="absolute inset-0 flex items-center justify-center text-center px-8">
-          <p className="text-muted">That&rsquo;s everyone for now — check back soon 🌊</p>
+          <p className="text-muted">That&rsquo;s everyone for now — check back soon</p>
         </div>
       )}
       {nextCard && <StaticCard card={nextCard} />}
