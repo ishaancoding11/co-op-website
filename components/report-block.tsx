@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from 'react';
 import { reportUser, blockUser } from '@/lib/actions';
-import { inputCls } from './ui';
+import { inputCls, Select } from './ui';
 
 export function ReportBlock({ targetUserId, targetName, path }: { targetUserId: string; targetName: string; path: string }) {
   const [open, setOpen] = useState(false);
@@ -20,14 +20,14 @@ export function ReportBlock({ targetUserId, targetName, path }: { targetUserId: 
       {open && !state?.ok && (
         <form action={action} className="w-full max-w-sm space-y-2 mt-2">
           <input type="hidden" name="reported_user_id" value={targetUserId} />
-          <select name="reason" required className={inputCls}>
+          <Select name="reason" required>
             <option value="">Reason…</option>
             <option>Spam or scam</option>
             <option>Inappropriate content</option>
             <option>Harassment</option>
             <option>Impersonation</option>
             <option>Other</option>
-          </select>
+          </Select>
           <textarea name="details" rows={2} className={inputCls} placeholder="Anything else we should know (optional)" />
           <button disabled={pending} className="rounded-full bg-foreground text-background px-4 py-2 font-medium">Submit report</button>
         </form>

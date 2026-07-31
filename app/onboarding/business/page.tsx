@@ -4,6 +4,7 @@ import { saveBusinessProfile } from '@/lib/actions';
 import { Card, Field, inputCls } from '@/components/ui';
 import { RangeSlider } from '@/components/range-slider';
 import { LocationField } from '@/components/location-field';
+import { PhotoUploader } from '@/components/photo-uploader';
 
 export default async function BusinessOnboarding() {
   const { userId, business, creative } = await getViewer();
@@ -17,6 +18,9 @@ export default async function BusinessOnboarding() {
       <p className="text-muted text-sm mt-1">Then verify your business email to start posting jobs.</p>
       <Card className="p-6 mt-6">
         <form action={saveBusinessProfile} className="space-y-5">
+          <Field label="Logo / photo">
+            <PhotoUploader name="logo" label="Upload a logo" currentUrl={business?.logo_url} currentName={business?.business_name ?? 'Business'} />
+          </Field>
           <Field label="Business name"><input required name="business_name" className={inputCls} defaultValue={business?.business_name ?? ''} /></Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Type"><input name="category" className={inputCls} defaultValue={business?.category ?? ''} placeholder="Coffee shop, salon…" /></Field>

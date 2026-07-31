@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { postJob } from '@/lib/actions';
-import { Field, inputCls, LocationSelect } from '@/components/ui';
+import { Field, inputCls, LocationSelect, Select } from '@/components/ui';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 
 export function JobForm({ defaultLocation }: { defaultLocation: string | null }) {
@@ -15,9 +15,9 @@ export function JobForm({ defaultLocation }: { defaultLocation: string | null })
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Category">
-          <select required name="category" className={inputCls}>
+          <Select required name="category">
             {ALL_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
-          </select>
+          </Select>
         </Field>
         <Field label="Location">
           <LocationSelect name="location" defaultValue={defaultLocation} />

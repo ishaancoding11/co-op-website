@@ -7,12 +7,14 @@ import { CategoryPicker } from './category-picker';
 import { RangeSlider } from '@/components/range-slider';
 import { DayPicker } from '@/components/day-picker';
 import { LocationField } from '@/components/location-field';
+import { PhotoUploader } from '@/components/photo-uploader';
 
 export default async function CreativeOnboarding() {
-  const { userId, creative, business } = await getViewer();
+  const { userId, creative, business, supabase } = await getViewer();
   if (!userId) redirect('/login?role=creative');
   // Roles are locked at signup: an account with a business profile can't add a creative one.
   if (business && !creative) redirect('/browse');
+  const { data: u } = await supabase.from('users').select('display_name').eq('id', userId).maybeSingle();
 
   return (
     <div className="py-10 max-w-xl mx-auto">
@@ -20,6 +22,9 @@ export default async function CreativeOnboarding() {
       <p className="text-muted text-sm mt-1">This is what local businesses see when they discover you.</p>
       <Card className="p-6 mt-6">
         <form action={saveCreativeProfile} className="space-y-5">
+          <Field label="Profile photo">
+            <PhotoUploader name="avatar" label="Upload a photo" currentUrl={creative?.avatar_url} currentName={u?.display_name ?? 'Creative'} />
+          </Field>
           <Field label="What do you do?" hint="Pick all that apply.">
             <CategoryPicker all={ALL_CATEGORIES} labels={CATEGORY_LABELS} initial={creative?.categories ?? []} name="categories" />
           </Field>

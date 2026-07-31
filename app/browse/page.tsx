@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { Card, Tag, Avatar, Rating, EmptyState, inputCls, LocationSelect } from '@/components/ui';
+import { Card, Tag, Avatar, Rating, EmptyState, LocationSelect, Select } from '@/components/ui';
 import { RangeSlider } from '@/components/range-slider';
 import { ALL_CATEGORIES, CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 
@@ -52,21 +52,21 @@ export default async function Browse({ searchParams }: {
     <div className="py-8">
       <h1 className="font-display text-3xl">{sp.q ? `Results for “${sp.q}”` : 'Browse local creatives'}</h1>
       <form className="mt-4 flex flex-wrap gap-2 items-end" role="search" aria-label="Filter creatives">
-        <select name="category" defaultValue={sp.category ?? ''} className={`${inputCls} !w-auto`} aria-label="Category">
+        <Select name="category" defaultValue={sp.category ?? ''} className="!w-auto" aria-label="Category">
           <option value="">All categories</option>
           {ALL_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
-        </select>
+        </Select>
         <LocationSelect name="neighborhood" defaultValue={sp.neighborhood} allowAny className="!w-auto" ariaLabel="Location" />
         <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
           <RangeSlider nameMin="price_min" nameMax="price_max" label="price"
             initialMin={sp.price_min ? Number(sp.price_min) : 0}
             initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
         </div>
-        <select name="min_rating" defaultValue={sp.min_rating ?? ''} className={`${inputCls} !w-auto`} aria-label="Rating">
+        <Select name="min_rating" defaultValue={sp.min_rating ?? ''} className="!w-auto" aria-label="Rating">
           <option value="">Any rating</option>
           <option value="4">4★ & up</option>
           <option value="4.5">4.5★ & up</option>
-        </select>
+        </Select>
         <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
       </form>
 

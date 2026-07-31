@@ -44,9 +44,17 @@ export default async function Settings() {
         </div>
       </Card>
 
+      <Card className="p-5 mt-4 flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-sm">Billing & plans</h2>
+          <p className="text-xs text-muted mt-1">Manage your Co-op subscription.</p>
+        </div>
+        <LinkButton href="/billing" size="sm" variant="secondary">Go to billing</LinkButton>
+      </Card>
+
       <Card className="p-5 mt-4">
         <h2 className="font-semibold text-sm">About payments</h2>
-        <p className="text-xs text-muted mt-1.5">Co-op takes no fees, commissions, or cuts — ever. Payment is always arranged directly between the business and the creative.</p>
+        <p className="text-xs text-muted mt-1.5">Co-op charges a subscription for platform access only — never a fee, commission, or cut of any job. Payment for the work itself is always arranged directly between the business and the creative.</p>
       </Card>
 
       <Card className="p-5 mt-4 flex items-center justify-between">

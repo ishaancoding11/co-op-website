@@ -58,6 +58,7 @@ export async function Nav() {
             <nav className="flex items-center gap-2">
               <Link href="/browse" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Browse creatives</Link>
               <Link href="/jobs" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Browse jobs</Link>
+              <Link href="/login?mode=login" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Log in</Link>
               <GetStartedButton />
             </nav>
           </div>
@@ -77,6 +78,7 @@ export async function Nav() {
       { href: '/jobs/mine', label: 'My jobs & applicants' },
       { href: '/matches', label: 'Matches' },
       { href: '/dashboard', label: 'Bookings' },
+      { href: '/billing', label: 'Billing' },
     ];
     return (
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
@@ -130,7 +132,7 @@ export async function Nav() {
           </form>
           <div className="flex items-center gap-1 ml-auto">
             <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 mr-2">
-              {creativeTabs.map(t => (
+              {[...creativeTabs, { href: '/billing', label: 'Billing' }].map(t => (
                 <Link key={t.href} href={t.href} className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50">
                   {t.label}
                 </Link>

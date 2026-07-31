@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { ReactNode, SelectHTMLAttributes } from 'react';
 import { LOCATION_GROUPS, WEEKDAYS } from '@/lib/types';
 
 export function Button({ children, variant = 'primary', size = 'md', className = '', ...props }: {
@@ -140,19 +140,42 @@ export function IconPin({ size = 16 }: { size?: number }) {
 export function IconPlus({ size = 16 }: { size?: number }) {
   return <svg {...iconProps(size)} aria-hidden><path d="M12 5v14M5 12h14"/></svg>;
 }
+export function IconChevronDown({ size = 14 }: { size?: number }) {
+  return <svg {...iconProps(size)} aria-hidden><path d="m6 9 6 6 6-6"/></svg>;
+}
+
+/**
+ * Design-system dropdown: a real <select> underneath (native keyboard/a11y/
+ * form behavior, no JS reimplementation of a listbox) but with the OS chrome
+ * stripped via appearance-none and our own chevron + colors drawn on top.
+ * Accepts any native select prop, so existing callers (controlled or not,
+ * with <optgroup>, required, onChange…) drop in unchanged.
+ */
+export function Select({ className = '', children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className={`relative ${className}`}>
+      <select {...rest} className={`${inputCls} w-full appearance-none pr-9 cursor-pointer`}>
+        {children}
+      </select>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted">
+        <IconChevronDown />
+      </span>
+    </div>
+  );
+}
 
 export function LocationSelect({ name = 'neighborhood', defaultValue, allowAny = false, anyLabel = 'All locations', className = '', ariaLabel }: {
   name?: string; defaultValue?: string | null; allowAny?: boolean; anyLabel?: string; className?: string; ariaLabel?: string;
 }) {
   return (
-    <select name={name} defaultValue={defaultValue ?? (allowAny ? '' : 'Newport Beach')} className={`${inputCls} ${className}`} aria-label={ariaLabel}>
+    <Select name={name} defaultValue={defaultValue ?? (allowAny ? '' : 'Newport Beach')} className={className} aria-label={ariaLabel}>
       {allowAny && <option value="">{anyLabel}</option>}
       {Object.entries(LOCATION_GROUPS).map(([region, areas]) => (
         <optgroup key={region} label={region}>
           {areas.map(a => <option key={a} value={a}>{a}</option>)}
         </optgroup>
       ))}
-    </select>
+    </Select>
   );
 }
 

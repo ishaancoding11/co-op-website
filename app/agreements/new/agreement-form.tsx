@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { createAgreement } from '@/lib/actions';
-import { Field, inputCls } from '@/components/ui';
+import { Field, inputCls, Select } from '@/components/ui';
 import type { Package } from '@/lib/types';
 
 export function AgreementForm({ matchId, jobTitle, packages }: { matchId: string; jobTitle: string | null; packages: Package[] }) {
@@ -12,10 +12,10 @@ export function AgreementForm({ matchId, jobTitle, packages }: { matchId: string
       <input type="hidden" name="match_id" value={matchId} />
       {packages.length > 0 && (
         <Field label="Start from a package (optional)">
-          <select name="package_id" className={inputCls} defaultValue="">
+          <Select name="package_id" defaultValue="">
             <option value="">No package — custom scope</option>
             {packages.map(p => <option key={p.id} value={p.id}>{p.tier}: {p.title} — ${p.price}</option>)}
-          </select>
+          </Select>
         </Field>
       )}
       <Field label="Scope of work">

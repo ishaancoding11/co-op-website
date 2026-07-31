@@ -20,6 +20,9 @@ export default async function Landing() {
         <p className="text-muted mt-5 md:text-lg">
           Co-op connects small businesses with nearby freelance creatives for photos, reels, branding, murals, and live music. Personal, quick, and easy — and Co-op never takes a cut.
         </p>
+        <p className="text-sm text-muted mt-4">
+          Already have an account? <Link href="/login?mode=login" className="text-foreground font-medium underline underline-offset-2">Log in</Link>
+        </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mt-12">

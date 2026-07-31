@@ -41,12 +41,22 @@ export async function chooseRole(role: 'creative' | 'business') {
 }
 
 // ===== Profiles =====
+async function uploadProfilePhoto(supabase: Awaited<ReturnType<typeof db>>['supabase'], userId: string, file: File | null): Promise<string | undefined> {
+  if (!file || file.size === 0) return undefined;
+  const path = `${userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+  const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+  if (error) throw new Error(error.message);
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+}
+
 export async function saveCreativeProfile(formData: FormData) {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=creative');
   const categories = formData.getAll('categories') as CreativeCategory[];
+  const avatarUrl = await uploadProfilePhoto(supabase, user.id, formData.get('avatar') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
+    ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     bio: (formData.get('bio') as string) || null,
     neighborhood: (formData.get('neighborhood') as string) || null,
     categories,
@@ -82,8 +92,10 @@ export async function saveBusinessProfile(formData: FormData) {
   const budgetMax = formData.get('budget_max') ? Number(formData.get('budget_max')) : null;
   // Derive the legacy $/$$/$$$ band from the numeric range for older display spots.
   const budgetBand = budgetMax == null ? null : budgetMax <= 250 ? '$' : budgetMax <= 1000 ? '$$' : '$$$';
+  const logoUrl = await uploadProfilePhoto(supabase, user.id, formData.get('logo') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
+    ...(logoUrl ? { logo_url: logoUrl } : {}),
     business_name: (formData.get('business_name') as string) || 'My business',
     category: (formData.get('category') as string) || null,
     neighborhood: (formData.get('neighborhood') as string) || null,
@@ -102,7 +114,8 @@ export async function saveBusinessProfile(formData: FormData) {
   }
   if (error) throw new Error(error.message);
   await setRole('business');
-  redirect('/onboarding/business/verify');
+  const { data: current } = await supabase.from('business_profiles').select('is_verified').eq('user_id', user.id).maybeSingle();
+  redirect(current?.is_verified ? `/business/${user.id}` : '/onboarding/business/verify');
 }
 
 export async function startVerification(prev: unknown, formData: FormData): Promise<{ error?: string; sent?: boolean }> {
@@ -138,6 +151,9 @@ export async function postJob(prev: unknown, formData: FormData): Promise<{ erro
   }).select('id').single();
   if (error) {
     if (error.code === '42501') return { error: 'Your business must be verified before posting jobs.' };
+    if (error.message.includes('BUSINESS_QUOTA_EXCEEDED')) {
+      return { error: 'You’ve reached your job-post limit. Subscribe or free up a slot to post more.' };
+    }
     return { error: error.message };
   }
   redirect(`/jobs/${job.id}`);
@@ -264,7 +280,12 @@ export async function createAgreement(prev: unknown, formData: FormData): Promis
     scope: (formData.get('scope') as string) || null,
     agreed_price: formData.get('agreed_price') ? Number(formData.get('agreed_price')) : null,
   }).select('id').single();
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message.includes('CREATIVE_QUOTA_EXCEEDED')) {
+      return { error: 'You’ve reached your monthly limit for accepted jobs. Subscribe to take on more.' };
+    }
+    return { error: error.message };
+  }
   redirect(`/agreements/${data.id}`);
 }
 
