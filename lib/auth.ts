@@ -33,3 +33,16 @@ export async function getViewer(): Promise<Viewer & { supabase: Awaited<ReturnTy
   else if (pref === 'creative' || pref === 'business') activeRole = pref; // mid-onboarding
   return { userId: user.id, creative, business, activeRole, supabase };
 }
+
+// Kept separate from getViewer() — it's called on every page render, and staff
+// status is only ever needed on /admin/*, so this stays a single opt-in query
+// rather than one more round trip for every ordinary visitor.
+export async function getStaffRole(): Promise<{ userId: string | null; staffRole: 'moderator' | 'admin' | null }> {
+  const { supabase, user } = await getSession();
+  if (!user) return { userId: null, staffRole: null };
+  // Reads via my_staff_role() (security definer, "your own row only"), never a
+  // direct column select — staff_role is column-revoked from the client
+  // entirely (see 0009_admin.sql) so nobody can read anyone else's.
+  const { data } = await supabase.rpc('my_staff_role');
+  return { userId: user.id, staffRole: (data as 'moderator' | 'admin' | null) ?? null };
+}

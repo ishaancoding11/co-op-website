@@ -154,6 +154,9 @@ export async function postJob(prev: unknown, formData: FormData): Promise<{ erro
     if (error.message.includes('BUSINESS_QUOTA_EXCEEDED')) {
       return { error: 'You’ve reached your job-post limit. Subscribe or free up a slot to post more.' };
     }
+    if (error.message.includes('ACCOUNT_SUSPENDED')) {
+      return { error: 'Your account is suspended and can’t post new jobs. Contact support if you think this is a mistake.' };
+    }
     return { error: error.message };
   }
   redirect(`/jobs/${job.id}`);
@@ -258,7 +261,12 @@ export async function sendMessage(matchId: string, body: string) {
   const { supabase, user } = await db();
   if (!user || !body.trim()) return { error: 'empty' };
   const { error } = await supabase.from('messages').insert({ match_id: matchId, sender_id: user.id, body: body.trim() });
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message.includes('ACCOUNT_SUSPENDED')) {
+      return { error: 'Your account is suspended and can’t send new messages.' };
+    }
+    return { error: error.message };
+  }
   const { data: m } = await supabase.from('matches').select('business_id, creative_id').eq('id', matchId).single();
   if (m) {
     const recipient = m.business_id === user.id ? m.creative_id : m.business_id;
@@ -283,6 +291,9 @@ export async function createAgreement(prev: unknown, formData: FormData): Promis
   if (error) {
     if (error.message.includes('CREATIVE_QUOTA_EXCEEDED')) {
       return { error: 'You’ve reached your monthly limit for accepted jobs. Subscribe to take on more.' };
+    }
+    if (error.message.includes('ACCOUNT_SUSPENDED')) {
+      return { error: 'One of the accounts on this agreement is suspended, so it can’t be created. Contact support if you think this is a mistake.' };
     }
     return { error: error.message };
   }
