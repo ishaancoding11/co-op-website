@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { chooseRole } from '@/lib/actions';
-import { getViewer } from '@/lib/auth';
+import { getViewer, getStaffRole } from '@/lib/auth';
 import { Card, LinkButton } from '@/components/ui';
 
 export default async function Landing() {
@@ -9,6 +9,14 @@ export default async function Landing() {
   const { userId, creative, business, activeRole } = await getViewer();
   if (userId && (creative || business)) {
     redirect(activeRole === 'business' ? '/browse' : '/jobs');
+  }
+  // A staff account with no creative/business profile skips onboarding
+  // entirely and goes straight to the admin panel. Only reachable if
+  // staff_role was already granted via a manual SQL update — there's no
+  // signup path that sets it.
+  if (userId && !creative && !business) {
+    const { staffRole } = await getStaffRole();
+    if (staffRole) redirect('/admin');
   }
   return (
     <div className="py-12 md:py-20">

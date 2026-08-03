@@ -16,9 +16,10 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.redirect(new URL('/login', url.origin));
   if (next) return NextResponse.redirect(new URL(next, url.origin));
 
-  const [{ data: creative }, { data: business }] = await Promise.all([
+  const [{ data: creative }, { data: business }, { data: staffRole }] = await Promise.all([
     supabase.from('creative_profiles').select('user_id').eq('user_id', user.id).maybeSingle(),
     supabase.from('business_profiles').select('user_id').eq('user_id', user.id).maybeSingle(),
+    supabase.rpc('my_staff_role'),
   ]);
 
   // Roles are locked at signup: an existing profile always wins over the
@@ -27,6 +28,10 @@ export async function GET(request: NextRequest) {
   let effectiveRole = role;
   if (creative) { dest = '/jobs'; effectiveRole = 'creative'; }
   else if (business) { dest = '/browse'; effectiveRole = 'business'; }
+  // A staff account with no creative/business profile skips onboarding
+  // entirely — staff_role is only ever granted by a manual SQL update to an
+  // existing account, so there's no signup path that reaches this branch.
+  else if (staffRole) dest = '/admin';
   else if (role === 'creative') dest = '/onboarding/creative';
   else if (role === 'business') dest = '/onboarding/business';
 

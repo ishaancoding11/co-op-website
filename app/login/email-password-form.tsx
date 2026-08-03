@@ -39,7 +39,13 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) { setError('Incorrect email or password.'); return; }
+      if (signInError) {
+        // Same message whether the password is wrong or no account exists at
+        // all for this email — distinguishing the two would let this form be
+        // used to enumerate registered emails.
+        setError("We couldn't sign you in with that email and password.");
+        return;
+      }
       router.push(next || '/');
       router.refresh();
     });
@@ -72,7 +78,7 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
       </button>
       <button type="button" onClick={() => { setMode(m => m === 'login' ? 'signup' : 'login'); setError(null); }}
         className="w-full text-xs text-muted underline underline-offset-2 hover:text-foreground text-center">
-        {mode === 'signup' ? 'Already have an account? Log in' : 'New to Co-op? Create an account'}
+        {mode === 'signup' ? 'Already have an account? Log in' : error ? 'New here? Create an account' : 'New to Co-op? Create an account'}
       </button>
     </form>
   );
