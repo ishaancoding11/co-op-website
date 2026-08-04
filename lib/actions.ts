@@ -182,16 +182,26 @@ async function findPairMatch(supabase: Awaited<ReturnType<typeof db>>['supabase'
 }
 
 // Business swipes/reaches out on a creative
-export async function businessAct(creativeId: string, action: 'liked' | 'passed', source: 'swipe' | 'direct' = 'swipe') {
+// Raw Postgres/PostgREST errors (constraint names, column names, SQL detail)
+// are never shown to users — logged server-side for debugging, and a plain
+// generic message goes back to the UI instead.
+function friendlyDbError(context: string, error: { message: string }): string {
+  console.error(`[db error] ${context}:`, error.message);
+  return 'Something went wrong — please try again.';
+}
+
+export async function businessAct(creativeId: string, action: 'liked' | 'passed', source: 'swipe' | 'direct' = 'swipe'): Promise<{ matched: boolean; error?: string }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=business');
   const existing = await findPairMatch(supabase, user.id, creativeId, null);
   let matched = false;
   if (existing) {
-    const { data } = await supabase.from('matches').update({ business_action: action }).eq('id', existing.id).select('is_matched').single();
+    const { data, error } = await supabase.from('matches').update({ business_action: action }).eq('id', existing.id).select('is_matched').single();
+    if (error) return { matched: false, error: friendlyDbError('businessAct update', error) };
     matched = !!data?.is_matched && !existing.is_matched;
   } else {
-    const { data } = await supabase.from('matches').insert({ business_id: user.id, creative_id: creativeId, source, business_action: action }).select('is_matched').single();
+    const { data, error } = await supabase.from('matches').insert({ business_id: user.id, creative_id: creativeId, source, business_action: action }).select('is_matched').single();
+    if (error) return { matched: false, error: friendlyDbError('businessAct insert', error) };
     matched = !!data?.is_matched;
   }
   if (matched) await emailUser(supabase, creativeId, "It's a match on Co-op!", "It's a match!", 'A local business wants to work with you. Open Co-op to say hi.', '/matches');
@@ -213,14 +223,14 @@ export async function applyToJob(prev: unknown, formData: FormData): Promise<{ e
       creative_action: 'liked', pitch: pitch ?? existing.pitch,
       pitch_portfolio_ids: portfolioIds.length ? portfolioIds : existing.pitch_portfolio_ids,
     }).eq('id', existing.id);
-    if (error) return { error: error.message };
+    if (error) return { error: friendlyDbError('applyToJob update', error) };
   } else {
     const { error } = await supabase.from('matches').insert({
       business_id: businessId, creative_id: user.id, job_id: jobId,
       source: 'job_apply', pitch, pitch_portfolio_ids: portfolioIds,
       creative_action: 'liked', application_status: 'applied',
     });
-    if (error) return { error: error.message };
+    if (error) return { error: friendlyDbError('applyToJob insert', error) };
     await emailUser(supabase, businessId, 'New application on Co-op', 'New application', 'A creative applied to your job. Compare applicants on Co-op.', `/jobs/${jobId}/applicants`);
   }
   revalidatePath(`/jobs/${jobId}`);
