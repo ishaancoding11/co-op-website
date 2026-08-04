@@ -129,9 +129,14 @@ export async function startVerification(prev: unknown, formData: FormData): Prom
     return { error: 'Could not start verification: ' + error.message };
   }
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  await sendEmail(email, 'Verify your business on Co-op',
+  const result = await sendEmail(email, 'Verify your business on Co-op',
     emailShell('Verify your business', 'Click below to confirm this email belongs to your business. The link expires in 24 hours.', `${site}/verify/${token}`, 'Confirm my business'));
   if (!process.env.RESEND_API_KEY) console.log(`[dev] verification link: ${site}/verify/${token}`);
+  // The verification token was already created above regardless — a failed
+  // send doesn't roll it back, it's still valid, the user just needs a
+  // working link. Surfacing the failure here (instead of always claiming
+  // success) is what would have caught today's bug immediately in the UI.
+  if (!result.sent) return { error: 'Could not send the verification email. Try again in a moment, or contact support if this keeps happening.' };
   return { sent: true };
 }
 

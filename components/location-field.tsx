@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { CITY_COORDS, LOCATION_GROUPS } from '@/lib/types';
-import { IconPin, Select } from './ui';
+import { IconPin } from './ui';
+import { Dropdown } from './dropdown';
 
 type GeoState = 'idle' | 'asking' | 'granted' | 'denied';
 
@@ -40,13 +41,8 @@ export function LocationField({ name = 'neighborhood', initial }: { name?: strin
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <Select name={name} value={value} onChange={e => setValue(e.target.value)} className="flex-1" aria-label="City">
-          {Object.entries(LOCATION_GROUPS).map(([region, cities]) => (
-            <optgroup key={region} label={region}>
-              {cities.map(c => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-          ))}
-        </Select>
+        <Dropdown name={name} value={value} onChange={setValue} ariaLabel="City" className="flex-1"
+          groups={Object.entries(LOCATION_GROUPS).map(([region, cities]) => ({ label: region, options: cities.map(c => ({ value: c, label: c })) }))} />
         <button type="button" onClick={useMyLocation} disabled={geo === 'asking'}
           className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-line bg-card px-3.5 text-sm font-medium text-muted hover:text-foreground hover:border-accent/50 disabled:opacity-50">
           <IconPin /> {geo === 'asking' ? 'Locating…' : 'Use my location'}

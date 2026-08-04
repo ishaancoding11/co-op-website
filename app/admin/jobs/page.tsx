@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { removeJob } from '@/lib/admin-actions';
-import { Card, Tag, Select, EmptyState } from '@/components/ui';
+import { Card, Tag, EmptyState } from '@/components/ui';
+import { Dropdown } from '@/components/dropdown';
 import { CATEGORY_LABELS, type CreativeCategory } from '@/lib/types';
 import { AdminStatusBadge, Metric, Pager, SearchBar } from '../admin-ui';
 
@@ -31,13 +32,13 @@ export default async function AdminJobs({ searchParams }: { searchParams: Promis
         <div className="flex-1 min-w-48"><SearchBar action="/admin/jobs" value={q} placeholder="Search by job or business name…" hidden={status ? { status } : undefined} /></div>
         <form className="flex gap-2">
           {q && <input type="hidden" name="q" value={q} />}
-          <Select name="status" defaultValue={status ?? ''} aria-label="Filter by status" className="!w-auto">
-            <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In progress</option>
-            <option value="completed">Completed</option>
-            <option value="closed">Closed / removed</option>
-          </Select>
+          <Dropdown name="status" defaultValue={status ?? ''} ariaLabel="Filter by status" className="w-44" options={[
+            { value: '', label: 'All statuses' },
+            { value: 'open', label: 'Open' },
+            { value: 'in_progress', label: 'In progress' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'closed', label: 'Closed / removed' },
+          ]} />
           <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
         </form>
       </div>

@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useTransition } from 'react';
 import { reportUser, blockUser } from '@/lib/actions';
-import { inputCls, Select } from './ui';
+import { inputCls } from './ui';
+import { Dropdown } from './dropdown';
 
 export function ReportBlock({ targetUserId, targetName, path }: { targetUserId: string; targetName: string; path: string }) {
   const [open, setOpen] = useState(false);
@@ -20,14 +21,13 @@ export function ReportBlock({ targetUserId, targetName, path }: { targetUserId: 
       {open && !state?.ok && (
         <form action={action} className="w-full max-w-sm space-y-2 mt-2">
           <input type="hidden" name="reported_user_id" value={targetUserId} />
-          <Select name="reason" required>
-            <option value="">Reason…</option>
-            <option>Spam or scam</option>
-            <option>Inappropriate content</option>
-            <option>Harassment</option>
-            <option>Impersonation</option>
-            <option>Other</option>
-          </Select>
+          <Dropdown name="reason" ariaLabel="Reason" options={[
+            { value: 'Spam or scam', label: 'Spam or scam' },
+            { value: 'Inappropriate content', label: 'Inappropriate content' },
+            { value: 'Harassment', label: 'Harassment' },
+            { value: 'Impersonation', label: 'Impersonation' },
+            { value: 'Other', label: 'Other' },
+          ]} />
           <textarea name="details" rows={2} className={inputCls} placeholder="Anything else we should know (optional)" />
           <button disabled={pending} className="rounded-full bg-foreground text-background px-4 py-2 font-medium">Submit report</button>
         </form>

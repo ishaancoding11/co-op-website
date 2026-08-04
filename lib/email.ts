@@ -3,17 +3,27 @@ import { Resend } from 'resend';
 const FROM = process.env.RESEND_FROM ?? 'Co-op <onboarding@resend.dev>';
 
 // Best-effort: if RESEND_API_KEY is unset (local dev), log and skip.
-export async function sendEmail(to: string, subject: string, html: string) {
+export async function sendEmail(to: string, subject: string, html: string): Promise<{ sent: boolean; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.log(`[email skipped — no RESEND_API_KEY] to=${to} subject=${subject}`);
-    return;
+    // If this line shows up in Vercel's function logs, RESEND_API_KEY is not
+    // present in the running deployment — check Settings > Environment
+    // Variables (Production must be checked) and redeploy after fixing it,
+    // since a saved env var does not retroactively apply to a live deployment.
+    console.log(`[email skipped — RESEND_API_KEY not set in this runtime] to=${to} subject=${subject}`);
+    return { sent: false, error: 'RESEND_API_KEY not set' };
   }
   try {
     const resend = new Resend(key);
-    await resend.emails.send({ from: FROM, to, subject, html });
+    const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+    if (error) {
+      console.error('Resend rejected the send', error);
+      return { sent: false, error: error.message };
+    }
+    return { sent: true };
   } catch (e) {
     console.error('Resend send failed', e);
+    return { sent: false, error: e instanceof Error ? e.message : 'unknown error' };
   }
 }
 

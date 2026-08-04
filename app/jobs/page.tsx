@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getViewer } from '@/lib/auth';
-import { Card, Tag, StatusBadge, VerifiedBadge, EmptyState, LinkButton, Select, LocationSelect } from '@/components/ui';
+import { Card, Tag, StatusBadge, VerifiedBadge, EmptyState, LinkButton } from '@/components/ui';
+import { Dropdown, LocationSelect } from '@/components/dropdown';
 import { SaveJobButton } from '@/components/save-job-button';
 import { RangeSlider } from '@/components/range-slider';
 import { ALL_CATEGORIES, CATEGORY_LABELS, priceRange, type CreativeCategory, type Job } from '@/lib/types';
@@ -96,23 +97,22 @@ export default async function JobFeed({ searchParams }: {
       </div>
 
       <form className="mt-4 flex flex-wrap gap-2" role="search" aria-label="Filter jobs">
-        <Select name="category" defaultValue={sp.category ?? ''} aria-label="Category" className="!w-auto">
-          <option value="">All categories</option>
-          {ALL_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
-        </Select>
-        <LocationSelect name="location" defaultValue={sp.location} allowAny className="!w-auto" ariaLabel="Location" />
+        <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
+          leadingOptions={[{ value: '', label: 'All categories' }]}
+          options={ALL_CATEGORIES.map(c => ({ value: c, label: CATEGORY_LABELS[c] }))} />
+        <LocationSelect name="location" defaultValue={sp.location} allowAny className="w-44" ariaLabel="Location" />
         <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
           <RangeSlider nameMin="price_min" nameMax="price_max" label="budget"
             initialMin={sp.price_min ? Number(sp.price_min) : 0}
             initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
         </div>
         {activeRole === 'creative' && (
-          <Select name="sort" defaultValue={sort} aria-label="Sort jobs" className="!w-auto">
-            <option value="featured">Featured — best fit for you</option>
-            <option value="price_asc">Price: low to high</option>
-            <option value="price_desc">Price: high to low</option>
-            <option value="newest">Newest</option>
-          </Select>
+          <Dropdown name="sort" defaultValue={sort} ariaLabel="Sort jobs" className="w-52" options={[
+            { value: 'featured', label: 'Featured — best fit for you' },
+            { value: 'price_asc', label: 'Price: low to high' },
+            { value: 'price_desc', label: 'Price: high to low' },
+            { value: 'newest', label: 'Newest' },
+          ]} />
         )}
         <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
       </form>

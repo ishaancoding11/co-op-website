@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { resolveReport } from '@/lib/admin-actions';
-import { Card, Select, EmptyState } from '@/components/ui';
+import { Card, EmptyState } from '@/components/ui';
+import { Dropdown } from '@/components/dropdown';
 import { AdminStatusBadge } from '../admin-ui';
 
 type ReportRow = {
@@ -20,12 +21,12 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
   return (
     <div>
       <form className="flex gap-2">
-        <Select name="status" defaultValue={status ?? ''} aria-label="Filter by status" className="!w-auto">
-          <option value="">All reports</option>
-          <option value="open">Open</option>
-          <option value="resolved">Resolved</option>
-          <option value="dismissed">Dismissed</option>
-        </Select>
+        <Dropdown name="status" defaultValue={status ?? ''} ariaLabel="Filter by status" className="w-40" options={[
+          { value: '', label: 'All reports' },
+          { value: 'open', label: 'Open' },
+          { value: 'resolved', label: 'Resolved' },
+          { value: 'dismissed', label: 'Dismissed' },
+        ]} />
         <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
       </form>
 
