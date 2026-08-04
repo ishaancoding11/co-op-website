@@ -67,7 +67,13 @@ export async function Nav() {
     );
   }
 
-  const profileHref = activeRole === 'business' ? `/business/${userId}` : `/creatives/${userId}`;
+  // The nav shell can show before onboarding finishes (activeRole comes from
+  // the coop_role cookie alone while creative/business is still null — see
+  // getViewer()), so the profile link must not assume a row exists yet: that
+  // was sending people straight to a 404 for their own avatar.
+  const profileHref = activeRole === 'business'
+    ? (business ? `/business/${userId}` : '/onboarding/business')
+    : (creative ? `/creatives/${userId}` : '/onboarding/creative');
   const avatarUrl = activeRole === 'business' ? business?.logo_url : creative?.avatar_url;
 
   // ===== Business shell: hiring toolbar, no category strip =====
