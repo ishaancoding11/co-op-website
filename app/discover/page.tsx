@@ -33,7 +33,7 @@ export default async function Discover() {
       categories: (c.categories as CreativeCategory[]).map(x => CATEGORY_LABELS[x]),
       neighborhood: c.neighborhood,
       bio: c.bio,
-      price: priceRange(c.rate_min, c.rate_max),
+      price: priceRange(c.rate_min, c.rate_max, c.currency),
       rating: rs.length ? rs.reduce((s, r) => s + r.stars, 0) / rs.length : null,
       reviewCount: rs.length,
       heroUrl: hero?.media_url ?? null,

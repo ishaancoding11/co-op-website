@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { businessAct, toggleFavorite } from '@/lib/actions';
 import { Card, Tag, Avatar, Rating, LinkButton, NoFeeNote, AvailabilityStrip } from '@/components/ui';
-import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
+import { CATEGORY_LABELS, displayNameFor, formatMoney, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
 import { ReportBlock } from '@/components/report-block';
 
 export default async function CreativeProfile({ params }: { params: Promise<{ id: string }> }) {
@@ -68,7 +68,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
             {c.bio && <p className="text-sm">{c.bio}</p>}
             <p className="text-sm text-muted">
               📍 {c.neighborhood ?? 'Newport Beach'}
-              {priceRange(c.rate_min, c.rate_max) ? <> · 💰 {priceRange(c.rate_min, c.rate_max)}</> : null}
+              {priceRange(c.rate_min, c.rate_max, c.currency) ? <> · 💰 {priceRange(c.rate_min, c.rate_max, c.currency)}</> : null}
               {c.availability ? <> · {c.availability}</> : null}
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start pt-1">
@@ -89,7 +89,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
               <Card key={p.id} className="p-4 min-w-52 shrink-0">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-[11px] uppercase tracking-wider text-accent font-semibold">{p.tier}</p>
-                  <p className="font-display text-lg">${p.price}</p>
+                  <p className="font-display text-lg">{formatMoney(p.price, c.currency)}</p>
                 </div>
                 <p className="text-sm font-medium">{p.title}</p>
                 <p className="text-xs text-muted mt-0.5">{p.deliverables.slice(0, 2).join(' · ')}{p.turnaround_days ? ` · ${p.turnaround_days}d` : ''}</p>
@@ -140,7 +140,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
               </div>
             )}
             {((musician as MusicianDetails).rate_per_set_min || (musician as MusicianDetails).rate_per_set_max) && (
-              <p className="text-sm text-muted mt-3">Rate per set: {priceRange((musician as MusicianDetails).rate_per_set_min, (musician as MusicianDetails).rate_per_set_max)}</p>
+              <p className="text-sm text-muted mt-3">Rate per set: {priceRange((musician as MusicianDetails).rate_per_set_min, (musician as MusicianDetails).rate_per_set_max, c.currency)}</p>
             )}
           </Card>
         </section>

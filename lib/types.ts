@@ -14,6 +14,12 @@ export const CATEGORY_LABELS: Record<CreativeCategory, string> = {
 
 export const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as CreativeCategory[];
 
+// ===== Currency =====
+export type Currency = 'USD' | 'KZT';
+export type Country = 'US' | 'KZ';
+
+export const CURRENCY_SYMBOL: Record<Currency, string> = { USD: '$', KZT: '₸' };
+
 // City/region-level locations for the dropdowns, grouped by area (pilot city first).
 // Sub-neighborhoods (e.g. Corona del Mar, Balboa Island) are intentionally folded
 // into their parent city — see NOTES.md.
@@ -35,9 +41,57 @@ export const LOCATION_GROUPS: Record<string, string[]> = {
   'Central & Northern CA': [
     'Sacramento', 'Fresno', 'Santa Barbara', 'San Luis Obispo', 'Monterey',
   ],
+  Kazakhstan: [
+    'Almaty', 'Astana', 'Shymkent', 'Karaganda', 'Aktobe', 'Taraz',
+    'Pavlodar', 'Oskemen', 'Semey', 'Atyrau', 'Kostanay', 'Kyzylorda', 'Aktau',
+  ],
 };
 
 export const NEIGHBORHOODS = Object.values(LOCATION_GROUPS).flat();
+
+// Cities that settle in tenge. Everything else defaults to USD. Kept in sync
+// with currency_for_place() in migration 0011 so a job's displayed currency
+// matches the one stored on the row.
+export const KZ_CITIES = new Set(LOCATION_GROUPS.Kazakhstan);
+
+export function currencyForPlace(place: string | null | undefined): Currency {
+  return place && KZ_CITIES.has(place) ? 'KZT' : 'USD';
+}
+
+export function countryForPlace(place: string | null | undefined): Country {
+  return currencyForPlace(place) === 'KZT' ? 'KZ' : 'US';
+}
+
+// A business's government registration id: a US EIN (9 digits, usually written
+// XX-XXXXXXX) or a Kazakhstan БИН (12 digits). Co-op calls no registry to
+// confirm the number is real — there is no free one — so this only checks the
+// *shape* per country, enough to catch a typo or a phone number typed in the
+// wrong box. The stored value is normalised to digits only.
+export function registrationLabelFor(country: Country): string {
+  return country === 'KZ' ? 'БИН' : 'EIN';
+}
+
+/**
+ * Validate + normalise a registration number for a country. Returns the
+ * digits-only value to store, or an error message describing the expected shape.
+ * An empty input is allowed (the field is optional) and returns { value: null }.
+ */
+export function validateRegistrationNumber(
+  raw: string | null | undefined,
+  country: Country,
+): { value: string | null; error?: string } {
+  const trimmed = (raw ?? '').trim();
+  if (!trimmed) return { value: null };
+  const digits = trimmed.replace(/[\s-]/g, '');
+  if (!/^\d+$/.test(digits)) {
+    return { value: null, error: `${registrationLabelFor(country)} should contain only digits.` };
+  }
+  const expected = country === 'KZ' ? 12 : 9;
+  if (digits.length !== expected) {
+    return { value: null, error: `${registrationLabelFor(country)} must be ${expected} digits.` };
+  }
+  return { value: digits };
+}
 
 // Approximate centroids for snapping browser geolocation to the nearest city.
 // Soft convenience signal only — never used for verification.
@@ -61,6 +115,11 @@ export const CITY_COORDS: Record<string, [number, number]> = {
   Sacramento: [38.5816, -121.4944], Fresno: [36.7378, -119.7871],
   'Santa Barbara': [34.4208, -119.6982], 'San Luis Obispo': [35.2828, -120.6596],
   Monterey: [36.6002, -121.8947],
+  Almaty: [43.222, 76.8512], Astana: [51.1605, 71.4704], Shymkent: [42.3417, 69.5901],
+  Karaganda: [49.8047, 73.1094], Aktobe: [50.2839, 57.167], Taraz: [42.9, 71.3667],
+  Pavlodar: [52.2871, 76.9674], Oskemen: [49.9714, 82.6059], Semey: [50.4111, 80.2275],
+  Atyrau: [47.0945, 51.9238], Kostanay: [53.2144, 63.6246], Kyzylorda: [44.8479, 65.4823],
+  Aktau: [43.6525, 51.1575],
 };
 
 export const WEEKDAYS = [
@@ -75,14 +134,15 @@ export type CreativeProfile = {
   user_id: string; bio: string | null; neighborhood: string | null;
   categories: CreativeCategory[]; rate_min: number | null; rate_max: number | null;
   availability: string | null; available_days?: string[]; response_time_hours: number | null;
-  avatar_url: string | null; is_public: boolean;
+  avatar_url: string | null; is_public: boolean; currency?: Currency;
   users?: UserRow;
 };
 
 export type BusinessProfile = {
   user_id: string; business_name: string; category: string | null; neighborhood: string | null;
   needs: CreativeCategory[]; needs_description?: string | null; budget_band: string | null;
-  budget_min?: number | null; budget_max?: number | null;
+  budget_min?: number | null; budget_max?: number | null; currency?: Currency;
+  registration_number?: string | null;
   brand_vibe_tags: string[] | null;
   logo_url: string | null; verification_email: string | null;
   is_verified: boolean; verified_at: string | null;
@@ -92,7 +152,7 @@ export type BusinessProfile = {
 export type Job = {
   id: string; business_id: string; title: string; description: string;
   category: CreativeCategory; budget_min: number | null; budget_max: number | null;
-  deadline: string | null; location: string | null;
+  deadline: string | null; location: string | null; currency?: Currency;
   status: 'open' | 'in_progress' | 'completed' | 'closed'; created_at: string;
   business_profiles?: BusinessProfile;
 };
@@ -111,7 +171,7 @@ export type Message = { id: string; match_id: string; sender_id: string; body: s
 export type Agreement = {
   id: string; match_id: string; business_id: string; creative_id: string;
   job_id: string | null; package_id: string | null; scope: string | null;
-  agreed_price: number | null;
+  agreed_price: number | null; currency?: Currency;
   status: 'requested' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
   completed_by_business_at: string | null; completed_by_creative_at: string | null;
   created_at: string;
@@ -132,7 +192,7 @@ export type PortfolioItem = {
 export type Package = {
   id: string; creative_id: string; tier: 'basic' | 'standard' | 'premium';
   title: string; deliverables: string[]; turnaround_days: number | null;
-  revisions: number | null; price: number;
+  revisions: number | null; price: number; currency?: Currency;
 };
 
 export type MusicianDetails = {
@@ -147,10 +207,17 @@ export type Notification = {
   is_read: boolean; created_at: string;
 };
 
-export function priceRange(min: number | null, max: number | null) {
+// Money is an indicative range (a budget/rate), never a charged amount, so it is
+// shown in whole units with the row's own currency symbol. `currency` defaults
+// to USD so any not-yet-updated caller still renders correctly for the pilot.
+export function formatMoney(amount: number, currency: Currency = 'USD'): string {
+  return `${CURRENCY_SYMBOL[currency]}${amount.toLocaleString('en-US')}`;
+}
+
+export function priceRange(min: number | null, max: number | null, currency: Currency = 'USD') {
   if (min == null && max == null) return null;
-  if (min != null && max != null) return `$${min}–$${max}`;
-  return `$${min ?? max}`;
+  if (min != null && max != null) return `${formatMoney(min, currency)}–${formatMoney(max, currency)}`;
+  return formatMoney((min ?? max) as number, currency);
 }
 
 // Privacy: creatives are shown to other people as "First L." (never a full name),

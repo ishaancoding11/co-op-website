@@ -44,7 +44,7 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
 
       <div className="flex flex-wrap gap-2 mt-4">
         <Tag tone="accent">{CATEGORY_LABELS[j.category as keyof typeof CATEGORY_LABELS]}</Tag>
-        {priceRange(j.budget_min, j.budget_max) && <Tag tone="sea">{priceRange(j.budget_min, j.budget_max)}</Tag>}
+        {priceRange(j.budget_min, j.budget_max, j.currency) && <Tag tone="sea">{priceRange(j.budget_min, j.budget_max, j.currency)}</Tag>}
         {j.deadline && <Tag>Due {new Date(j.deadline + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Tag>}
       </div>
 

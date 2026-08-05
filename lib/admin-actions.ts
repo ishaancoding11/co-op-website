@@ -47,3 +47,15 @@ export async function removeJob(formData: FormData): Promise<void> {
   await supabase.rpc('admin_remove_job', { p_job: jobId, p_reason: reason });
   revalidatePath('/admin/jobs');
 }
+
+export async function resolveManualSubscription(requestId: string, confirm: boolean) {
+  const { supabase } = await db();
+  await supabase.rpc('admin_resolve_manual_subscription', { p_request: requestId, p_confirm: confirm });
+  revalidatePath('/admin/kzt');
+}
+
+export async function resolveSupportTicket(ticketId: string, status: 'resolved' | 'dismissed') {
+  const { supabase } = await db();
+  await supabase.rpc('admin_resolve_support_ticket', { p_ticket: ticketId, p_status: status });
+  revalidatePath('/admin/support');
+}

@@ -89,7 +89,7 @@ export default async function Browse({ searchParams }: {
                       <h2 className="font-semibold truncate">{name}</h2>
                       <Rating value={c.rating} count={c.reviewCount || undefined} />
                     </div>
-                    <p className="text-xs text-muted mt-0.5">{c.neighborhood} {priceRange(c.rate_min, c.rate_max) ? `· ${priceRange(c.rate_min, c.rate_max)}` : ''}</p>
+                    <p className="text-xs text-muted mt-0.5">{c.neighborhood} {priceRange(c.rate_min, c.rate_max, c.currency) ? `· ${priceRange(c.rate_min, c.rate_max, c.currency)}` : ''}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {(c.categories as CreativeCategory[]).slice(0, 3).map(x => <Tag key={x} tone="accent">{CATEGORY_LABELS[x]}</Tag>)}
                     </div>

@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "browseCreatives": "Browse creatives",
+    "browseJobs": "Browse jobs",
+    "discover": "Discover",
+    "myJobs": "My jobs & applicants",
+    "matches": "Matches",
+    "bookings": "Bookings",
+    "billing": "Billing",
+    "jobs": "Jobs",
+    "portfolio": "Portfolio",
+    "postJob": "Post a job",
+    "login": "Log in",
+    "getStarted": "Get started",
+    "searchJobs": "Search jobs…",
+    "all": "All",
+    "language": "Language"
+  },
+  "jobs": {
+    "title": "Open jobs nearby",
+    "subtitle": "Local businesses looking for creative work right now",
+    "empty": "No open jobs match your filters yet.",
+    "budgetTBD": "Budget TBD",
+    "daysLeft": "{count} days left",
+    "oneDayLeft": "1 day left",
+    "sortFeatured": "Featured",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "from": "from"
+  },
+  "billing": {
+    "title": "Billing & plans",
+    "manage": "Manage billing",
+    "payInTenge": "Pay in tenge (₸)",
+    "kztNotice": "Card payments in tenge run through a manual review — request the plan and our team confirms once payment is received.",
+    "requestPlan": "Request plan",
+    "requesting": "Sending…",
+    "requestSent": "Request sent. We'll confirm once payment is received.",
+    "choose": "Choose",
+    "opening": "Opening checkout…",
+    "currentPlan": "Your current plan",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "billedYearly": "billed yearly"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…"
+  }
+}

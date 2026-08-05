@@ -1,16 +1,22 @@
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { openBillingPortal } from '@/lib/billing-actions';
-import { PLAN_PRICING, PLAN_LABELS, type SubscriptionPlan } from '@/lib/plans';
+import { PLAN_PRICING, PLAN_PRICING_KZT, PLAN_LABELS, type SubscriptionPlan } from '@/lib/plans';
 import { Card, NoFeeNote } from '@/components/ui';
 import { PlanCard } from './plan-card';
+import { getT } from '@/lib/i18n-server';
+import type { Currency } from '@/lib/types';
 
 export default async function Billing() {
-  const { userId, activeRole, supabase } = await getViewer();
+  const { userId, activeRole, creative, business, supabase } = await getViewer();
   if (!userId) redirect('/login');
   if (!activeRole) redirect('/');
+  const { t } = await getT();
 
   const isCreative = activeRole === 'creative';
+  // Which rail the user pays through follows the currency on their own profile:
+  // a Kazakhstan account (KZT) can't use Stripe Checkout and takes the manual lane.
+  const currency: Currency = (isCreative ? creative?.currency : business?.currency) ?? 'USD';
   type CreativeQuota = { trialing: boolean; trial_ends_at: string | null; plan: SubscriptionPlan | null; monthly_limit: number | null; used: number; unlimited: boolean; can_accept: boolean };
   type BusinessQuota = { trialing: boolean; trial_ends_at: string | null; plan: SubscriptionPlan | null; job_cap: number | null; active_jobs: number; unlimited: boolean; can_post: boolean };
   const { data: quota } = isCreative
@@ -29,7 +35,7 @@ export default async function Billing() {
 
   return (
     <div className="py-8 max-w-4xl mx-auto">
-      <h1 className="font-display text-3xl">Billing & plans</h1>
+      <h1 className="font-display text-3xl">{t('billing.title')}</h1>
       <p className="text-muted text-sm mt-1">
         {isCreative
           ? 'Subscribe to keep applying for and accepting jobs after your trial.'
@@ -56,7 +62,7 @@ export default async function Billing() {
         )}
         {currentPlan && (
           <form action={openBillingPortal} className="mt-3">
-            <button className="rounded-full border border-line px-4 py-1.5 text-sm font-medium hover:bg-background">Manage billing</button>
+            <button className="rounded-full border border-line px-4 py-1.5 text-sm font-medium hover:bg-background">{t('billing.manage')}</button>
           </form>
         )}
       </Card>
@@ -64,10 +70,18 @@ export default async function Billing() {
       <div className={`grid gap-4 mt-6 ${plans.length > 1 ? 'sm:grid-cols-2' : 'max-w-sm'}`}>
         {plans.map(plan => {
           const p = PLAN_PRICING[plan];
+          const kzt = PLAN_PRICING_KZT[plan];
           return (
             <PlanCard key={plan} plan={plan} label={PLAN_LABELS[plan]} blurb={p.blurb} features={p.features}
               monthly={p.monthly} annual={p.annual} annualSavingsLabel={p.annualSavingsLabel}
-              current={currentPlan === plan} highlight={plan === 'creative_premium' || plan === 'business_standard'} />
+              currency={currency} monthlyKzt={kzt.monthly} annualKzt={kzt.annual}
+              current={currentPlan === plan} highlight={plan === 'creative_premium' || plan === 'business_standard'}
+              labels={{
+                choose: t('billing.choose'), opening: t('billing.opening'), currentPlan: t('billing.currentPlan'),
+                monthly: t('billing.monthly'), annual: t('billing.annual'),
+                requestPlan: t('billing.requestPlan'), requesting: t('billing.requesting'), requested: t('billing.requestSent'),
+                billedYearly: t('billing.billedYearly'), kztNotice: t('billing.kztNotice'),
+              }} />
           );
         })}
       </div>

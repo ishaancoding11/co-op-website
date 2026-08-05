@@ -5,6 +5,7 @@ import { Dropdown, LocationSelect } from '@/components/dropdown';
 import { SaveJobButton } from '@/components/save-job-button';
 import { RangeSlider } from '@/components/range-slider';
 import { ALL_CATEGORIES, CATEGORY_LABELS, priceRange, type CreativeCategory, type Job } from '@/lib/types';
+import { getT } from '@/lib/i18n-server';
 
 const CATEGORY_ICON: Record<CreativeCategory, string> = {
   photographer: '📷', graphic_designer: '🎨', videographer: '🎬',
@@ -24,6 +25,7 @@ export default async function JobFeed({ searchParams }: {
 }) {
   const sp = await searchParams;
   const { userId, activeRole, creative, supabase } = await getViewer();
+  const { t } = await getT();
 
   let q = supabase.from('jobs').select('*, business_profiles(business_name, neighborhood, is_verified, logo_url)').eq('status', 'open').order('created_at', { ascending: false });
   if (sp.category) q = q.eq('category', sp.category);
@@ -90,8 +92,8 @@ export default async function JobFeed({ searchParams }: {
     <div className="py-8">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-3xl">Open jobs nearby</h1>
-          <p className="text-muted text-sm mt-1">Local businesses looking for creative work right now.</p>
+          <h1 className="font-display text-3xl">{t('jobs.title')}</h1>
+          <p className="text-muted text-sm mt-1">{t('jobs.subtitle')}</p>
         </div>
         {activeRole === 'business' && <LinkButton href="/jobs/new">+ Post a job</LinkButton>}
       </div>
@@ -118,7 +120,7 @@ export default async function JobFeed({ searchParams }: {
       </form>
 
       {!jobs?.length ? (
-        <EmptyState title="No open jobs match" body="Check back soon — or make yourself discoverable so businesses find you first." />
+        <EmptyState title={t('jobs.empty')} body="Check back soon — or make yourself discoverable so businesses find you first." />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           {(jobs as (Job & { business_profiles: { business_name: string; neighborhood: string | null; is_verified: boolean } | null })[]).map(j => {
@@ -135,9 +137,9 @@ export default async function JobFeed({ searchParams }: {
                   <Card className="overflow-hidden h-full flex flex-col hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                     <div className="h-40 bg-sea-soft flex items-center justify-center relative">
                       <span className="text-5xl" aria-hidden>{CATEGORY_ICON[j.category]}</span>
-                      {priceRange(j.budget_min, j.budget_max) && (
+                      {priceRange(j.budget_min, j.budget_max, j.currency) && (
                         <span className="absolute bottom-3 left-3 rounded-lg bg-foreground/85 text-background px-2.5 py-1 text-xs font-semibold backdrop-blur">
-                          {priceRange(j.budget_min, j.budget_max)}
+                          {priceRange(j.budget_min, j.budget_max, j.currency)}
                         </span>
                       )}
                     </div>

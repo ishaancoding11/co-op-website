@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { sendEmail, emailShell } from './email';
-import type { CreativeCategory } from './types';
+import { type CreativeCategory, countryForPlace, currencyForPlace, validateRegistrationNumber } from './types';
+import { redactContacts } from './guard-content';
+import { assertImageUpload, detectMediaKind } from './upload-validation';
 
 async function db() {
   const cookieStore = await cookies();
@@ -43,6 +45,9 @@ export async function chooseRole(role: 'creative' | 'business') {
 // ===== Profiles =====
 async function uploadProfilePhoto(supabase: Awaited<ReturnType<typeof db>>['supabase'], userId: string, file: File | null): Promise<string | undefined> {
   if (!file || file.size === 0) return undefined;
+  // Trust the bytes, not the client-declared MIME/extension — a disguised file
+  // stored as an avatar would be served back with an image Content-Type.
+  await assertImageUpload(file);
   const path = `${userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
   const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
   if (error) throw new Error(error.message);
@@ -53,12 +58,14 @@ export async function saveCreativeProfile(formData: FormData) {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=creative');
   const categories = formData.getAll('categories') as CreativeCategory[];
+  const neighborhood = (formData.get('neighborhood') as string) || null;
   const avatarUrl = await uploadProfilePhoto(supabase, user.id, formData.get('avatar') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
     ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     bio: (formData.get('bio') as string) || null,
-    neighborhood: (formData.get('neighborhood') as string) || null,
+    neighborhood,
+    currency: currencyForPlace(neighborhood),
     categories,
     rate_min: formData.get('rate_min') ? Number(formData.get('rate_min')) : null,
     rate_max: formData.get('rate_max') ? Number(formData.get('rate_max')) : null,
@@ -71,7 +78,7 @@ export async function saveCreativeProfile(formData: FormData) {
   let { error } = await supabase.from('creative_profiles').upsert(row);
   if (error?.code === 'PGRST204') {
     // A newer column's migration hasn't been applied yet — save everything else
-    delete row.available_days; delete row.latitude; delete row.longitude;
+    delete row.available_days; delete row.latitude; delete row.longitude; delete row.currency;
     ({ error } = await supabase.from('creative_profiles').upsert(row));
   }
   if (error) throw new Error(error.message);
@@ -92,13 +99,22 @@ export async function saveBusinessProfile(formData: FormData) {
   const budgetMax = formData.get('budget_max') ? Number(formData.get('budget_max')) : null;
   // Derive the legacy $/$$/$$$ band from the numeric range for older display spots.
   const budgetBand = budgetMax == null ? null : budgetMax <= 250 ? '$' : budgetMax <= 1000 ? '$$' : '$$$';
+  const neighborhood = (formData.get('neighborhood') as string) || null;
+  // Registration id (EIN in the US, БИН in KZ) is self-declared — validate its
+  // shape for the business's country and store the digits only. Co-op checks no
+  // government registry, so a wrong-format entry is rejected here rather than
+  // silently stored.
+  const reg = validateRegistrationNumber(formData.get('registration_number') as string, countryForPlace(neighborhood));
+  if (reg.error) throw new Error(reg.error);
   const logoUrl = await uploadProfilePhoto(supabase, user.id, formData.get('logo') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
     ...(logoUrl ? { logo_url: logoUrl } : {}),
     business_name: (formData.get('business_name') as string) || 'My business',
     category: (formData.get('category') as string) || null,
-    neighborhood: (formData.get('neighborhood') as string) || null,
+    neighborhood,
+    currency: currencyForPlace(neighborhood),
+    registration_number: reg.value,
     needs_description: (formData.get('needs_description') as string) || null,
     budget_min: budgetMin, budget_max: budgetMax, budget_band: budgetBand,
     latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
@@ -109,7 +125,8 @@ export async function saveBusinessProfile(formData: FormData) {
   if (error?.code === 'PGRST204') {
     // A newer column's migration hasn't been applied yet — fall back to base columns
     delete row.budget_min; delete row.budget_max; delete row.needs_description;
-    delete row.latitude; delete row.longitude;
+    delete row.latitude; delete row.longitude; delete row.currency;
+    delete row.registration_number;
     ({ error } = await supabase.from('business_profiles').upsert(row));
   }
   if (error) throw new Error(error.message);
@@ -144,7 +161,8 @@ export async function startVerification(prev: unknown, formData: FormData): Prom
 export async function postJob(prev: unknown, formData: FormData): Promise<{ error?: string }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=business');
-  const { data: job, error } = await supabase.from('jobs').insert({
+  const location = (formData.get('location') as string) || null;
+  const row: Record<string, unknown> = {
     business_id: user.id,
     title: formData.get('title') as string,
     description: formData.get('description') as string,
@@ -152,8 +170,15 @@ export async function postJob(prev: unknown, formData: FormData): Promise<{ erro
     budget_min: formData.get('budget_min') ? Number(formData.get('budget_min')) : null,
     budget_max: formData.get('budget_max') ? Number(formData.get('budget_max')) : null,
     deadline: (formData.get('deadline') as string) || null,
-    location: (formData.get('location') as string) || null,
-  }).select('id').single();
+    location,
+    currency: currencyForPlace(location),
+  };
+  let { data: job, error } = await supabase.from('jobs').insert(row).select('id').single();
+  if (error?.code === 'PGRST204') {
+    // The currency column's migration hasn't been applied yet — retry without it
+    delete row.currency;
+    ({ data: job, error } = await supabase.from('jobs').insert(row).select('id').single());
+  }
   if (error) {
     if (error.code === '42501') return { error: 'Your business must be verified before posting jobs.' };
     if (error.message.includes('BUSINESS_QUOTA_EXCEEDED')) {
@@ -164,6 +189,7 @@ export async function postJob(prev: unknown, formData: FormData): Promise<{ erro
     }
     return { error: error.message };
   }
+  if (!job) return { error: 'Could not create the job. Try again.' };
   redirect(`/jobs/${job.id}`);
 }
 
@@ -275,7 +301,11 @@ export async function setApplicationStatus(matchId: string, status: 'shortlisted
 export async function sendMessage(matchId: string, body: string) {
   const { supabase, user } = await db();
   if (!user || !body.trim()) return { error: 'empty' };
-  const { error } = await supabase.from('messages').insert({ match_id: matchId, sender_id: user.id, body: body.trim() });
+  // Redact contact details before the message is ever stored, so an off-platform
+  // phone/email/@handle/link is masked for good rather than living in the row.
+  const clean = redactContacts(body.trim());
+  const masked = clean !== body.trim();
+  const { error } = await supabase.from('messages').insert({ match_id: matchId, sender_id: user.id, body: clean });
   if (error) {
     if (error.message.includes('ACCOUNT_SUSPENDED')) {
       return { error: 'Your account is suspended and can’t send new messages.' };
@@ -287,7 +317,7 @@ export async function sendMessage(matchId: string, body: string) {
     const recipient = m.business_id === user.id ? m.creative_id : m.business_id;
     await emailUser(supabase, recipient, 'New message on Co-op', 'New message', 'You have a new message waiting on Co-op.', `/messages/${matchId}`);
   }
-  return { ok: true };
+  return { ok: true, masked };
 }
 
 // ===== Agreements =====
@@ -297,12 +327,29 @@ export async function createAgreement(prev: unknown, formData: FormData): Promis
   const matchId = formData.get('match_id') as string;
   const { data: m } = await supabase.from('matches').select('*').eq('id', matchId).single();
   if (!m) return { error: 'Match not found' };
-  const { data, error } = await supabase.from('agreements').insert({
+  // The agreed price is denominated in the job's currency (or the business's, for
+  // direct matches with no job), so the row carries it forward for display.
+  let currency: string | undefined;
+  if (m.job_id) {
+    const { data: j } = await supabase.from('jobs').select('currency').eq('id', m.job_id).maybeSingle();
+    currency = j?.currency;
+  }
+  if (!currency) {
+    const { data: bp } = await supabase.from('business_profiles').select('currency').eq('user_id', m.business_id).maybeSingle();
+    currency = bp?.currency;
+  }
+  const row: Record<string, unknown> = {
     match_id: matchId, business_id: m.business_id, creative_id: m.creative_id, job_id: m.job_id,
     package_id: (formData.get('package_id') as string) || null,
     scope: (formData.get('scope') as string) || null,
     agreed_price: formData.get('agreed_price') ? Number(formData.get('agreed_price')) : null,
-  }).select('id').single();
+    currency: currency ?? 'USD',
+  };
+  let { data, error } = await supabase.from('agreements').insert(row).select('id').single();
+  if (error?.code === 'PGRST204') {
+    delete row.currency;
+    ({ data, error } = await supabase.from('agreements').insert(row).select('id').single());
+  }
   if (error) {
     if (error.message.includes('CREATIVE_QUOTA_EXCEEDED')) {
       return { error: 'You’ve reached your monthly limit for accepted jobs. Subscribe to take on more.' };
@@ -312,6 +359,7 @@ export async function createAgreement(prev: unknown, formData: FormData): Promis
     }
     return { error: error.message };
   }
+  if (!data) return { error: 'Could not create the agreement. Try again.' };
   redirect(`/agreements/${data.id}`);
 }
 
@@ -376,11 +424,13 @@ export async function addPortfolioItem(formData: FormData) {
   let media_url: string | null = null;
   let media_type: 'image' | 'video' | 'audio' | 'link' = 'link';
   if (file && file.size > 0) {
+    // Derive the stored media_type from the file's real signature, not its claimed
+    // MIME — an unrecognised file is rejected here rather than mislabelled.
+    media_type = await detectMediaKind(file);
     const path = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
     const { error } = await supabase.storage.from('portfolio').upload(path, file);
     if (error) throw new Error(error.message);
     media_url = supabase.storage.from('portfolio').getPublicUrl(path).data.publicUrl;
-    media_type = file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image';
   } else if (formData.get('url')) {
     media_url = formData.get('url') as string;
   }

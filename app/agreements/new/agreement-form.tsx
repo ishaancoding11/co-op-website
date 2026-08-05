@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { createAgreement } from '@/lib/actions';
 import { Field, inputCls } from '@/components/ui';
 import { Dropdown } from '@/components/dropdown';
-import type { Package } from '@/lib/types';
+import { formatMoney, type Package } from '@/lib/types';
 
 export function AgreementForm({ matchId, jobTitle, packages }: { matchId: string; jobTitle: string | null; packages: Package[] }) {
   const [state, action, pending] = useActionState(createAgreement, {});
@@ -14,7 +14,7 @@ export function AgreementForm({ matchId, jobTitle, packages }: { matchId: string
       {packages.length > 0 && (
         <Field label="Start from a package (optional)">
           <Dropdown name="package_id" defaultValue="" ariaLabel="Package" leadingOptions={[{ value: '', label: 'No package — custom scope' }]}
-            options={packages.map(p => ({ value: p.id, label: `${p.tier}: ${p.title} — $${p.price}` }))} />
+            options={packages.map(p => ({ value: p.id, label: `${p.tier}: ${p.title} — ${formatMoney(p.price, p.currency)}` }))} />
         </Field>
       )}
       <Field label="Scope of work">

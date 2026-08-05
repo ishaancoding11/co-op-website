@@ -59,7 +59,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
               📍 {b.neighborhood ?? 'Newport Beach'}
               {b.category ? <> · {b.category}</> : null}
               {b.budget_min != null && b.budget_max != null
-                ? <> · 💰 {priceRange(b.budget_min, b.budget_max)}</>
+                ? <> · 💰 {priceRange(b.budget_min, b.budget_max, b.currency)}</>
                 : b.budget_band ? <> · 💰 {b.budget_band}</> : null}
             </p>
             {b.needs_description ? (
@@ -90,7 +90,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
                 <Card className="p-4 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                   <div>
                     <p className="font-semibold">{j.title}</p>
-                    <p className="text-xs text-muted">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max) ?? 'Budget TBD'}</p>
+                    <p className="text-xs text-muted">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
                   </div>
                   <StatusBadge status={j.status} />
                 </Card>

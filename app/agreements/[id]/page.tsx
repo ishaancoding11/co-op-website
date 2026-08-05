@@ -4,7 +4,7 @@ import { getViewer } from '@/lib/auth';
 import { markComplete, updateAgreementStatus } from '@/lib/actions';
 import { Card, StatusBadge, NoFeeNote, LinkButton } from '@/components/ui';
 import { ReviewForm } from './review-form';
-import { displayNameFor, type Review } from '@/lib/types';
+import { displayNameFor, formatMoney, type Review } from '@/lib/types';
 
 export default async function AgreementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,7 +38,7 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
       <Card className="p-6 mt-5 space-y-3">
         {(a.jobs as { title: string } | null)?.title && <p className="text-sm"><span className="text-muted">Job:</span> {(a.jobs as { title: string }).title}</p>}
         <p className="text-sm whitespace-pre-wrap"><span className="text-muted">Scope:</span> {a.scope ?? '—'}</p>
-        <p className="text-sm"><span className="text-muted">Agreed price:</span> {a.agreed_price != null ? `$${a.agreed_price}` : 'TBD'}</p>
+        <p className="text-sm"><span className="text-muted">Agreed price:</span> {a.agreed_price != null ? formatMoney(a.agreed_price, a.currency) : 'TBD'}</p>
         <NoFeeNote />
       </Card>
 

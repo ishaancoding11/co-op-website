@@ -39,6 +39,9 @@ export default async function BusinessOnboarding() {
           <Field label="Brand vibe tags" hint="Comma-separated, e.g. coastal, minimal, warm">
             <input name="brand_vibe_tags" className={inputCls} defaultValue={business?.brand_vibe_tags?.join(', ') ?? ''} />
           </Field>
+          <Field label="Business registration number" hint="Optional — US EIN (9 digits) or KZ БИН (12 digits). Helps us verify your business.">
+            <input name="registration_number" className={inputCls} defaultValue={business?.registration_number ?? ''} placeholder="e.g. 12-3456789" inputMode="numeric" />
+          </Field>
           <button className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium hover:opacity-85">Save & continue to verification</button>
         </form>
       </Card>

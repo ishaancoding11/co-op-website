@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, StatusBadge, EmptyState, LinkButton } from '@/components/ui';
-import { displayNameFor } from '@/lib/types';
+import { displayNameFor, formatMoney } from '@/lib/types';
 
 export default async function Dashboard() {
   const { userId, activeRole, supabase } = await getViewer();
@@ -27,7 +27,7 @@ export default async function Dashboard() {
         <Card className={`p-4 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow ${needsMe ? 'border-accent' : ''}`}>
           <div>
             <p className="font-semibold">{otherName}</p>
-            <p className="text-xs text-muted">{(a.jobs as { title: string } | null)?.title ?? a.scope ?? 'Custom project'} {a.agreed_price != null ? `· $${a.agreed_price}` : ''}</p>
+            <p className="text-xs text-muted">{(a.jobs as { title: string } | null)?.title ?? a.scope ?? 'Custom project'} {a.agreed_price != null ? `· ${formatMoney(a.agreed_price, a.currency)}` : ''}</p>
             {needsMe && <p className="text-xs text-accent font-medium mt-0.5">They marked complete — your turn</p>}
           </div>
           <StatusBadge status={a.status} />

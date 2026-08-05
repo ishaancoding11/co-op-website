@@ -84,6 +84,30 @@ export async function startSubscriptionCheckout(prev: unknown, formData: FormDat
   redirect(session.url);
 }
 
+/**
+ * Kazakhstan path: Stripe doesn't operate there, so a KZT user can't check out
+ * with a card. Instead they file a request that staff confirm once payment lands
+ * (Kaspi transfer / invoice). Like Stripe checkout above, this grants nothing on
+ * its own — request_manual_subscription() only inserts a pending row, and the
+ * plan is applied only when an admin calls admin_resolve_manual_subscription().
+ */
+export async function requestManualSubscription(prev: unknown, formData: FormData): Promise<{ error?: string; requested?: boolean }> {
+  const { supabase, user } = await db();
+  if (!user) redirect('/login');
+
+  const plan = formData.get('plan') as SubscriptionPlan | null;
+  const interval = (formData.get('interval') as 'monthly' | 'annual') ?? 'monthly';
+  if (!plan) return { error: 'Choose a plan.' };
+
+  const { error } = await supabase.rpc('request_manual_subscription', { p_plan: plan, p_interval: interval });
+  if (error) {
+    if (error.message.includes('PLAN_ROLE_MISMATCH')) return { error: 'That plan is for a different account type.' };
+    if (error.message.includes('PLAN_NOT_OFFERED_IN_KZT')) return { error: 'This plan isn’t available for tenge payment yet.' };
+    return { error: 'Could not submit your request. Try again in a moment.' };
+  }
+  return { requested: true };
+}
+
 /** Cancelling, changing card, switching interval — all in Stripe's own portal,
  *  never re-implemented here. Only the webhook may write subscription state. */
 export async function openBillingPortal(): Promise<void> {

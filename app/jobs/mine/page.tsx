@@ -33,7 +33,7 @@ export default async function MyJobs() {
                 <Card className="p-5 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                   <div>
                     <h2 className="font-semibold group-hover:underline underline-offset-2">{j.title}</h2>
-                    <p className="text-xs text-muted mt-0.5">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max) ?? 'Budget TBD'}</p>
+                    <p className="text-xs text-muted mt-0.5">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Tag tone={count ? 'accent' : 'neutral'}>{count} applicant{count === 1 ? '' : 's'}</Tag>
