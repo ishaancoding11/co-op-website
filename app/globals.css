@@ -1,42 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf7f2;   /* warm sand */
-  --foreground: #2d2a26;   /* driftwood ink */
-  --muted: #8a8378;
-  --card: #ffffff;
-  --line: #e9e2d6;
-  --accent: #c2703e;       /* terracotta */
-  --accent-soft: #f3e3d3;
-  --sea: #4f7a75;          /* eucalyptus sea */
-  --sea-soft: #e3edeb;
-  --gold: #d9a441;
+  --background: #fbf8f3;   /* warm paper — matches the logo's off-white */
+  --surface-2: #f3ede3;    /* recessed sand, for wells & alt rows */
+  --foreground: #1f1b16;   /* deep ink */
+  --muted: #7d7367;
+  --card: #ffffff;         /* clean white cards, like the references */
+  --line: #ece4d7;
+  --line-strong: #d8ccb8;  /* for dividers that need to read */
+  --accent: #ec5729;       /* Co-op orange — sampled straight from the logo */
+  --accent-deep: #cd4319;  /* pressed / hover */
+  --accent-soft: #fce2d6;
+  --sea: #4a7a72;          /* eucalyptus, used sparingly as a secondary */
+  --sea-soft: #e2efeb;
+  --gold: #cf9a34;
+  --gold-soft: #f6eccf;
+
+  /* Elevation — warm-tinted shadows, never pure black */
+  --shadow-sm: 0 1px 2px rgba(58, 48, 38, 0.05), 0 1px 3px rgba(58, 48, 38, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(58, 48, 38, 0.08), 0 2px 6px -2px rgba(58, 48, 38, 0.06);
+  --shadow-lg: 0 18px 40px -12px rgba(58, 48, 38, 0.16), 0 6px 16px -8px rgba(58, 48, 38, 0.10);
+
+  /* Motion — strong custom curves (built-in CSS easings are too weak).
+     Per Emil Kowalski: ease-out for enter/exit, never ease-in on UI. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-card: var(--card);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
   --color-accent-soft: var(--accent-soft);
   --color-sea: var(--sea);
   --color-sea-soft: var(--sea-soft);
   --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);
+  --shadow-soft: var(--shadow-md);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, .font-display {
   font-family: var(--font-display), Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.018em;
+  font-weight: 560;
 }
+
+/* Fraunces italics are genuinely beautiful — let emphasis lean into them. */
+.font-display em, h1 em, h2 em { font-style: italic; }
 
 *:focus-visible {
   outline: 2px solid var(--accent);
@@ -44,4 +72,44 @@ h1, h2, .font-display {
   border-radius: 4px;
 }
 
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent-soft); color: var(--accent-deep); }
+
+/* Utility: hairline top-rule used on editorial section headers. */
+.rule-accent::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  margin-bottom: 0.9rem;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise 0.6s var(--ease-out) both; }
+
+/* Pressable feedback — subtle scale so the UI feels like it's listening.
+   Only transform (GPU), never `all`. */
+.press { transition: transform 160ms var(--ease-out); }
+.press:active { transform: scale(0.97); }
+
+/* Staggered list entrance — short delays (Emil: 30–80ms between items). */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stagger > * { opacity: 0; animation: fade-up 0.45s var(--ease-out) forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
+.stagger > *:nth-child(5) { animation-delay: 180ms; }
+.stagger > *:nth-child(6) { animation-delay: 225ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise, .stagger > * { animation: none; opacity: 1; }
+  .press:active { transform: none; }
+}

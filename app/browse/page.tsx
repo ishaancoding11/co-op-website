@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { Card, Tag, Avatar, Rating, EmptyState } from '@/components/ui';
+import { Card, Tag, Avatar, EmptyState, IconPin, IconHeart, IconSearch } from '@/components/ui';
 import { Dropdown, LocationSelect } from '@/components/dropdown';
 import { RangeSlider } from '@/components/range-slider';
-import { ALL_CATEGORIES, CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
+import { ALL_CATEGORIES, categoryLabel, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 
 export default async function Browse({ searchParams }: {
   searchParams: Promise<{ category?: string; neighborhood?: string; price_min?: string; price_max?: string; min_rating?: string; q?: string }>;
@@ -13,6 +14,7 @@ export default async function Browse({ searchParams }: {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
+  const locale = await getLocale();
 
   let q = supabase.from('creative_profiles').select('*, users(display_name)').eq('is_public', true);
   if (sp.category) q = q.contains('categories', [sp.category]);
@@ -51,50 +53,73 @@ export default async function Browse({ searchParams }: {
 
   return (
     <div className="py-8">
-      <h1 className="font-display text-3xl">{sp.q ? `Results for “${sp.q}”` : 'Browse local creatives'}</h1>
-      <form className="mt-4 flex flex-wrap gap-2 items-end" role="search" aria-label="Filter creatives">
-        <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
-          leadingOptions={[{ value: '', label: 'All categories' }]}
-          options={ALL_CATEGORIES.map(c => ({ value: c, label: CATEGORY_LABELS[c] }))} />
-        <LocationSelect name="neighborhood" defaultValue={sp.neighborhood} allowAny className="w-44" ariaLabel="Location" />
-        <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
-          <RangeSlider nameMin="price_min" nameMax="price_max" label="price"
-            initialMin={sp.price_min ? Number(sp.price_min) : 0}
-            initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
+      <h1 className="font-display text-3xl md:text-4xl">{sp.q ? `Results for “${sp.q}”` : 'Browse local creatives'}</h1>
+      <p className="text-muted text-sm mt-1.5">Photographers, designers, musicians and more — right in your neighborhood.</p>
+
+      {/* Search + filters — prominent pill, then a quiet row of refinements */}
+      <form className="mt-5" role="search" aria-label="Filter creatives">
+        <div className="flex items-center gap-2 rounded-full border border-line bg-card px-4 py-2.5 shadow-[var(--shadow-sm)] focus-within:border-accent transition-colors">
+          <span className="text-muted"><IconSearch size={19} /></span>
+          <input name="q" defaultValue={sp.q ?? ''} placeholder="Search creatives, styles, neighborhoods…" aria-label="Search"
+            className="flex-1 bg-transparent text-sm placeholder:text-muted/70 focus:outline-none" />
+          <button className="press rounded-full bg-foreground text-background px-5 py-2 text-sm font-medium">Search</button>
         </div>
-        <Dropdown name="min_rating" defaultValue={sp.min_rating ?? ''} ariaLabel="Rating" className="w-36" options={[
-          { value: '', label: 'Any rating' },
-          { value: '4', label: '4★ & up' },
-          { value: '4.5', label: '4.5★ & up' },
-        ]} />
-        <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
+        <div className="mt-3 flex flex-wrap gap-2 items-end">
+          <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
+            leadingOptions={[{ value: '', label: 'All categories' }]}
+            options={ALL_CATEGORIES.map(c => ({ value: c, label: categoryLabel(c, locale) }))} />
+          <LocationSelect name="neighborhood" defaultValue={sp.neighborhood} allowAny className="w-44" ariaLabel="Location" />
+          <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
+            <RangeSlider nameMin="price_min" nameMax="price_max" label="price"
+              initialMin={sp.price_min ? Number(sp.price_min) : 0}
+              initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
+          </div>
+          <Dropdown name="min_rating" defaultValue={sp.min_rating ?? ''} ariaLabel="Rating" className="w-36" options={[
+            { value: '', label: 'Any rating' },
+            { value: '4', label: '4★ & up' },
+            { value: '4.5', label: '4.5★ & up' },
+          ]} />
+        </div>
       </form>
 
       {withRating.length === 0 ? (
         <EmptyState title="No creatives match those filters" body="Try widening your budget or category." />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7 mt-7 stagger">
           {visible.map(c => {
             const name = displayNameFor((c.users as { display_name: string | null } | null)?.display_name);
+            const rate = priceRange(c.rate_min, c.rate_max, c.currency);
             return (
-              <Link key={c.user_id} href={`/creatives/${c.user_id}`} className="group">
-                <Card className="overflow-hidden hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
-                  <div className="h-40 bg-sea-soft">
-                    {c.hero
-                      ? <img src={c.hero} alt="" className="h-full w-full object-cover group-hover:scale-[1.02] transition-transform" />
-                      : <div className="h-full flex items-center justify-center"><Avatar name={name} url={c.avatar_url} size={64} /></div>}
+              <Link key={c.user_id} href={`/creatives/${c.user_id}`} className="group press block">
+                {/* Full-bleed listing image with floating price + rating, reference-style */}
+                <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-sea-soft shadow-[var(--shadow-sm)]">
+                  {c.hero
+                    ? <img src={c.hero} alt="" className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.04]" />
+                    : <div className="h-full flex items-center justify-center"><Avatar name={name} url={c.avatar_url} size={72} /></div>}
+                  {rate && (
+                    <span className="absolute top-3 left-3 rounded-full bg-background/90 text-foreground text-xs font-semibold px-3 py-1.5 shadow-[var(--shadow-sm)] backdrop-blur">
+                      {rate}
+                    </span>
+                  )}
+                  <span className="absolute top-3 right-3 grid place-items-center h-8 w-8 rounded-full bg-background/90 text-muted shadow-[var(--shadow-sm)] backdrop-blur transition-colors group-hover:text-accent" aria-hidden>
+                    <IconHeart size={16} />
+                  </span>
+                  {c.rating != null && (
+                    <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-foreground/85 text-background text-xs font-semibold px-2.5 py-1 backdrop-blur">
+                      <span className="text-gold" aria-hidden>★</span>{c.rating.toFixed(1)}
+                      {c.reviewCount ? <span className="opacity-70 font-normal">({c.reviewCount})</span> : null}
+                    </span>
+                  )}
+                </div>
+                <div className="px-1 pt-3">
+                  <h2 className="font-display text-lg leading-snug truncate group-hover:text-accent transition-colors">{name}</h2>
+                  <p className="text-sm text-muted mt-0.5 flex items-center gap-1.5">
+                    <IconPin size={14} />{c.neighborhood ?? 'Local'}
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {(c.categories as CreativeCategory[]).slice(0, 3).map(x => <Tag key={x} tone="accent">{categoryLabel(x, locale)}</Tag>)}
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <h2 className="font-semibold truncate">{name}</h2>
-                      <Rating value={c.rating} count={c.reviewCount || undefined} />
-                    </div>
-                    <p className="text-xs text-muted mt-0.5">{c.neighborhood} {priceRange(c.rate_min, c.rate_max, c.currency) ? `· ${priceRange(c.rate_min, c.rate_max, c.currency)}` : ''}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {(c.categories as CreativeCategory[]).slice(0, 3).map(x => <Tag key={x} tone="accent">{CATEGORY_LABELS[x]}</Tag>)}
-                    </div>
-                  </div>
-                </Card>
+                </div>
               </Link>
             );
           })}

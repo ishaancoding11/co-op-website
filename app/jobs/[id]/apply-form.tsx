@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { applyToJob } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
+import { LineIcon, mediaIcon } from '@/components/line-icons';
 import type { PortfolioItem } from '@/lib/types';
 
 export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; businessId: string; portfolio: PortfolioItem[] }) {
@@ -31,7 +32,7 @@ export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; bus
                   {selected && <span className="absolute top-1 right-1 z-10 h-5 w-5 rounded-full bg-accent text-white text-xs flex items-center justify-center">✓</span>}
                   {p.media_type === 'image' && p.media_url
                     ? <img src={p.media_url} alt={p.caption ?? 'Portfolio piece'} className="h-20 w-full object-cover" />
-                    : <div className="h-20 flex items-center justify-center text-xl bg-sea-soft" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : '🔗'}</div>}
+                    : <div className="h-20 flex items-center justify-center bg-sea-soft text-sea/70"><LineIcon name={mediaIcon(p.media_type)} size={22} /></div>}
                   <span className="block px-1.5 py-1 text-[10px] text-muted truncate">{p.is_favorite ? '★ ' : ''}{p.caption ?? 'Untitled'}</span>
                 </button>
               );

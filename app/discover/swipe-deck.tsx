@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion';
 import { businessAct } from '@/lib/actions';
 import { Rating, Tag, Avatar } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 
 export type DeckCard = {
   id: string; name: string; categories: string[]; neighborhood: string | null;
@@ -127,7 +128,7 @@ function MatchOverlay({ card, onClose }: { card: DeckCard; onClose: () => void }
       role="dialog" aria-modal="true" aria-label="It's a match">
       <motion.div initial={{ scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', bounce: 0.45 }}
         className="bg-card rounded-3xl p-8 text-center max-w-xs w-full">
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', bounce: 0.6 }} className="text-5xl" aria-hidden>🎉</motion.p>
+        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', bounce: 0.6 }} className="mx-auto grid place-items-center h-16 w-16 rounded-full bg-accent-soft text-accent" aria-hidden><LineIcon name="sparkle" size={32} /></motion.span>
         <h2 className="font-display text-3xl mt-3 text-accent">It&rsquo;s a match!</h2>
         <p className="text-sm text-muted mt-2">{card.name} liked you too. Your DM thread is now open.</p>
         <div className="mt-6 flex flex-col gap-2">

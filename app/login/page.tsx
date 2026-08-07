@@ -11,7 +11,8 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <div className="py-20 max-w-sm mx-auto">
       <Card className="p-8 text-center">
-        <h1 className="font-display text-3xl">Welcome to Co-op</h1>
+        <img src="/coop-wordmark.png" alt="Co-op" width={72} height={72} className="mx-auto rounded-xl shadow-[var(--shadow-sm)]" />
+        <h1 className="font-display text-3xl mt-4">Welcome to Co-op</h1>
         {gate === 'creative-limit' ? (
           <p className="text-muted text-sm mt-2">
             You&rsquo;ve viewed your one free creative profile as a guest. Sign in free to browse every local creative.

@@ -2,12 +2,15 @@ import { notFound } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { businessAct, toggleFavorite } from '@/lib/actions';
 import { Card, Tag, Avatar, Rating, LinkButton, NoFeeNote, AvailabilityStrip } from '@/components/ui';
-import { CATEGORY_LABELS, displayNameFor, formatMoney, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
+import { categoryLabel, displayNameFor, formatMoney, priceRange, type CreativeCategory, type MusicianDetails, type Package, type PortfolioItem, type Review } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 import { ReportBlock } from '@/components/report-block';
+import { LineIcon, mediaIcon } from '@/components/line-icons';
 
 export default async function CreativeProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { userId, business, supabase } = await getViewer();
+  const locale = await getLocale();
 
   const { data: c } = await supabase.from('creative_profiles').select('*, users(display_name)').eq('user_id', id).maybeSingle();
   if (!c) notFound();
@@ -66,13 +69,14 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
 
           <div className="mt-3 space-y-1.5">
             {c.bio && <p className="text-sm">{c.bio}</p>}
-            <p className="text-sm text-muted">
-              📍 {c.neighborhood ?? 'Newport Beach'}
-              {priceRange(c.rate_min, c.rate_max, c.currency) ? <> · 💰 {priceRange(c.rate_min, c.rate_max, c.currency)}</> : null}
-              {c.availability ? <> · {c.availability}</> : null}
+            <p className="text-sm text-muted flex items-center justify-center sm:justify-start flex-wrap gap-x-1.5 gap-y-1">
+              <LineIcon name="pin" size={15} className="text-muted/80" />
+              {c.neighborhood ?? 'Newport Beach'}
+              {priceRange(c.rate_min, c.rate_max, c.currency) ? <><span aria-hidden>·</span><LineIcon name="price" size={15} className="text-muted/80" />{priceRange(c.rate_min, c.rate_max, c.currency)}</> : null}
+              {c.availability ? <><span aria-hidden>·</span>{c.availability}</> : null}
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start pt-1">
-              {(c.categories as CreativeCategory[]).map(x => <Tag key={x} tone="accent">{CATEGORY_LABELS[x]}</Tag>)}
+              {(c.categories as CreativeCategory[]).map(x => <Tag key={x} tone="accent">{categoryLabel(x, locale)}</Tag>)}
             </div>
             {(c.available_days as string[] | null)?.length ? (
               <div className="pt-1.5 flex justify-center sm:justify-start"><AvailabilityStrip days={c.available_days as string[]} /></div>
@@ -110,8 +114,8 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
                 {p.media_type === 'image' && p.media_url ? (
                   <img src={p.media_url} alt={p.caption ?? `Work by ${name}`} className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform" />
                 ) : (
-                  <div className="h-full w-full flex flex-col items-center justify-center gap-1 px-2 text-center">
-                    <span className="text-2xl" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : p.source === 'completed_job' ? '✅' : '🔗'}</span>
+                  <div className="h-full w-full flex flex-col items-center justify-center gap-1 px-2 text-center text-sea/70">
+                    <LineIcon name={mediaIcon(p.media_type, p.source)} size={26} />
                     <span className="text-[10px] text-muted line-clamp-2">{p.caption ?? ''}</span>
                   </div>
                 )}
@@ -132,7 +136,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
           <h2 className="font-display text-xl">Venues & sets</h2>
           <Card className="p-5 mt-3">
             <ul className="space-y-1.5 text-sm">
-              {(musician as MusicianDetails).venues.map((v, i) => <li key={i}>🎤 <span className="font-medium">{v.name}</span>{v.event ? <span className="text-muted"> — {v.event}</span> : null}</li>)}
+              {(musician as MusicianDetails).venues.map((v, i) => <li key={i} className="flex items-center gap-2"><LineIcon name="mic" size={16} className="text-sea shrink-0" /><span className="font-medium">{v.name}</span>{v.event ? <span className="text-muted"> — {v.event}</span> : null}</li>)}
             </ul>
             {(musician as MusicianDetails).audio_links.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">

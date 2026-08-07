@@ -434,7 +434,26 @@ export async function addPortfolioItem(formData: FormData) {
   } else if (formData.get('url')) {
     media_url = formData.get('url') as string;
   }
-  await supabase.from('portfolio_items').insert({ creative_id: user.id, media_url, media_type, caption: (formData.get('caption') as string) || null });
+  const yearRaw = ((formData.get('project_year') as string) || '').trim();
+  const project_year = /^\d{4}$/.test(yearRaw) ? Number(yearRaw) : null;
+  const tags = ((formData.get('tags') as string) || '')
+    .split(',').map(s => s.trim()).filter(Boolean).slice(0, 8);
+  const row: Record<string, unknown> = {
+    creative_id: user.id, media_url, media_type,
+    caption: (formData.get('caption') as string) || null,
+    project_url: (formData.get('project_url') as string) || null,
+    project_year,
+    tags,
+  };
+  const { error: insErr } = await supabase.from('portfolio_items').insert(row);
+  if (insErr?.code === 'PGRST204') {
+    // Detail columns (project_url/project_year/tags) not migrated yet — fall
+    // back to the core insert so the form still works before 0013 is applied.
+    delete row.project_url; delete row.project_year; delete row.tags;
+    await supabase.from('portfolio_items').insert(row);
+  } else if (insErr) {
+    throw new Error(insErr.message);
+  }
   revalidatePath('/portfolio');
 }
 

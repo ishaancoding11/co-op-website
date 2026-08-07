@@ -3,12 +3,14 @@ import { notFound } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { creativePassJob, setJobStatus, toggleFavorite } from '@/lib/actions';
 import { Card, Tag, StatusBadge, VerifiedBadge, LinkButton, NoFeeNote } from '@/components/ui';
-import { CATEGORY_LABELS, priceRange, type PortfolioItem } from '@/lib/types';
+import { categoryLabel, priceRange, type PortfolioItem } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 import { ApplyForm } from './apply-form';
 
 export default async function JobDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { userId, creative, activeRole, supabase } = await getViewer();
+  const locale = await getLocale();
 
   const { data: j } = await supabase.from('jobs').select('*, business_profiles(business_name, neighborhood, is_verified, user_id)').eq('id', id).maybeSingle();
   if (!j) notFound();
@@ -43,7 +45,7 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4">
-        <Tag tone="accent">{CATEGORY_LABELS[j.category as keyof typeof CATEGORY_LABELS]}</Tag>
+        <Tag tone="accent">{categoryLabel(j.category, locale)}</Tag>
         {priceRange(j.budget_min, j.budget_max, j.currency) && <Tag tone="sea">{priceRange(j.budget_min, j.budget_max, j.currency)}</Tag>}
         {j.deadline && <Tag>Due {new Date(j.deadline + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Tag>}
       </div>

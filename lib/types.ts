@@ -12,6 +12,24 @@ export const CATEGORY_LABELS: Record<CreativeCategory, string> = {
   musician: 'Musician / Performer',
 };
 
+export const CATEGORY_LABELS_RU: Record<CreativeCategory, string> = {
+  photographer: 'Фотограф',
+  graphic_designer: 'Графический дизайнер',
+  videographer: 'Видеограф',
+  brand_designer: 'Бренд / Лого дизайнер',
+  muralist: 'Художник / Муралист',
+  content_creator: 'Контент-мейкер',
+  musician: 'Музыкант / Артист',
+};
+
+/** Locale-aware category label. Pass the request locale ('ru' switches to
+ *  Russian); anything else falls back to the English labels. Safe to call from
+ *  both client and server code — it takes a plain string, not the Locale type,
+ *  so it never drags server-only i18n into the client bundle. */
+export function categoryLabel(cat: CreativeCategory, locale?: string): string {
+  return (locale === 'ru' ? CATEGORY_LABELS_RU : CATEGORY_LABELS)[cat];
+}
+
 export const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as CreativeCategory[];
 
 // ===== Currency =====
@@ -187,6 +205,7 @@ export type PortfolioItem = {
   media_type: 'image' | 'video' | 'audio' | 'link'; caption: string | null;
   source: 'uploaded' | 'completed_job'; job_id: string | null;
   is_hidden: boolean; is_favorite?: boolean; sort_order: number; created_at: string;
+  project_url?: string | null; project_year?: number | null; tags?: string[] | null;
 };
 
 export type Package = {

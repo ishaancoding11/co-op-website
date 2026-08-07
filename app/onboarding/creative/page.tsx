@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { saveCreativeProfile } from '@/lib/actions';
 import { Card, Field, inputCls } from '@/components/ui';
-import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
+import { ALL_CATEGORIES, CATEGORY_LABELS, CATEGORY_LABELS_RU } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 import { CategoryPicker } from './category-picker';
 import { RangeSlider } from '@/components/range-slider';
 import { DayPicker } from '@/components/day-picker';
@@ -15,6 +16,8 @@ export default async function CreativeOnboarding() {
   // Roles are locked at signup: an account with a business profile can't add a creative one.
   if (business && !creative) redirect('/browse');
   const { data: u } = await supabase.from('users').select('display_name').eq('id', userId).maybeSingle();
+  const locale = await getLocale();
+  const categoryLabels = locale === 'ru' ? CATEGORY_LABELS_RU : CATEGORY_LABELS;
 
   return (
     <div className="py-10 max-w-xl mx-auto">
@@ -26,7 +29,7 @@ export default async function CreativeOnboarding() {
             <PhotoUploader name="avatar" label="Upload a photo" currentUrl={creative?.avatar_url} currentName={u?.display_name ?? 'Creative'} />
           </Field>
           <Field label="What do you do?" hint="Pick all that apply.">
-            <CategoryPicker all={ALL_CATEGORIES} labels={CATEGORY_LABELS} initial={creative?.categories ?? []} name="categories" />
+            <CategoryPicker all={ALL_CATEGORIES} labels={categoryLabels} initial={creative?.categories ?? []} name="categories" />
           </Field>
           <Field label="Bio">
             <textarea name="bio" rows={3} className={inputCls} defaultValue={creative?.bio ?? ''} placeholder="What you make, and what makes you worth booking." />

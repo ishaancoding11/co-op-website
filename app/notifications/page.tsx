@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { markAllNotificationsRead } from '@/lib/actions';
 import { Card, EmptyState } from '@/components/ui';
+import { LineIcon, type IconName } from '@/components/line-icons';
 import type { Notification } from '@/lib/types';
 
-const ICONS: Record<string, string> = {
-  new_match: '🎉', new_message: '💬', job_application: '📩', application_accepted: '✅',
-  review_request: '⭐️', review_received: '⭐️', agreement_update: '📋',
+const ICONS: Record<string, IconName> = {
+  new_match: 'sparkle', new_message: 'message', job_application: 'inbox', application_accepted: 'check',
+  review_request: 'star', review_received: 'star', agreement_update: 'clipboard',
 };
 
 export default async function Notifications() {
@@ -34,7 +35,7 @@ export default async function Notifications() {
           {(notifications as Notification[]).map(n => (
             <Link key={n.id} href={n.content.href ?? '#'} className="block">
               <Card className={`p-4 flex items-start gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow ${!n.is_read ? 'border-accent' : ''}`}>
-                <span className="text-xl" aria-hidden>{ICONS[n.type] ?? '🔔'}</span>
+                <span className="grid place-items-center h-8 w-8 shrink-0 rounded-full bg-accent-soft text-accent" aria-hidden><LineIcon name={ICONS[n.type] ?? 'bell'} size={17} /></span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.content.title ?? n.type}</p>
                   {n.content.body && <p className="text-xs text-muted mt-0.5">{n.content.body}</p>}

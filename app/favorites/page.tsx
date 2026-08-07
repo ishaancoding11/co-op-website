@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, Avatar, EmptyState, Tag, StatusBadge } from '@/components/ui';
-import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory, type Currency } from '@/lib/types';
+import { categoryLabel, displayNameFor, priceRange, type CreativeCategory, type Currency } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 
 export default async function Favorites() {
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login');
+  const locale = await getLocale();
 
   const { data: favs } = await supabase.from('favorites')
     .select('*, creative_profiles(neighborhood, categories, avatar_url, rate_min, rate_max, currency, users(display_name)), jobs(title, category, status, budget_min, budget_max, currency)')
@@ -36,7 +38,7 @@ export default async function Favorites() {
                         <p className="font-semibold">{name}</p>
                         <p className="text-xs text-muted">{cp?.neighborhood} · {priceRange(cp?.rate_min ?? null, cp?.rate_max ?? null, cp?.currency ?? undefined) ?? ''}</p>
                       </div>
-                      {(cp?.categories ?? []).slice(0, 2).map(c => <Tag key={c} tone="accent">{CATEGORY_LABELS[c]}</Tag>)}
+                      {(cp?.categories ?? []).slice(0, 2).map(c => <Tag key={c} tone="accent">{categoryLabel(c, locale)}</Tag>)}
                     </Card>
                   </Link>
                 );
@@ -53,7 +55,7 @@ export default async function Favorites() {
                     <Card className="p-4 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                       <div>
                         <p className="font-semibold">{j?.title}</p>
-                        <p className="text-xs text-muted">{j ? CATEGORY_LABELS[j.category] : ''} · {priceRange(j?.budget_min ?? null, j?.budget_max ?? null, j?.currency ?? undefined) ?? 'Budget TBD'}</p>
+                        <p className="text-xs text-muted">{j ? categoryLabel(j.category, locale) : ''} · {priceRange(j?.budget_min ?? null, j?.budget_max ?? null, j?.currency ?? undefined) ?? 'Budget TBD'}</p>
                       </div>
                       <StatusBadge status={j?.status ?? 'open'} />
                     </Card>

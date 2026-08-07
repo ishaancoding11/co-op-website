@@ -3,7 +3,6 @@ import 'server-only';
 import { cookies, headers } from 'next/headers';
 import en from '@/messages/en.json';
 import ru from '@/messages/ru.json';
-import kk from '@/messages/kk.json';
 import { type Locale, LOCALE_COOKIE, isLocale } from '@/lib/i18n';
 
 // A cookie-based, route-agnostic i18n reader. It intentionally does NOT push
@@ -13,7 +12,7 @@ import { type Locale, LOCALE_COOKIE, isLocale } from '@/lib/i18n';
 // pages that read the locale are dynamic (they touch cookies), which they
 // already are here.
 
-const DICTIONARIES: Record<Locale, Record<string, unknown>> = { en, ru, kk };
+const DICTIONARIES: Record<Locale, Record<string, unknown>> = { en, ru };
 
 /** cookie → Accept-Language → English. */
 export async function getLocale(): Promise<Locale> {

@@ -4,9 +4,11 @@ import { useActionState } from 'react';
 import { postJob } from '@/lib/actions';
 import { Field, inputCls } from '@/components/ui';
 import { Dropdown, LocationSelect } from '@/components/dropdown';
-import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 
-export function JobForm({ defaultLocation }: { defaultLocation: string | null }) {
+export function JobForm({ defaultLocation, categoryOptions }: {
+  defaultLocation: string | null;
+  categoryOptions: { value: string; label: string }[];
+}) {
   const [state, action, pending] = useActionState(postJob, {});
   return (
     <form action={action} className="space-y-5">
@@ -16,7 +18,7 @@ export function JobForm({ defaultLocation }: { defaultLocation: string | null })
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Category">
-          <Dropdown name="category" ariaLabel="Category" options={ALL_CATEGORIES.map(c => ({ value: c, label: CATEGORY_LABELS[c] }))} />
+          <Dropdown name="category" ariaLabel="Category" options={categoryOptions} />
         </Field>
         <Field label="Location">
           <LocationSelect name="location" defaultValue={defaultLocation} />

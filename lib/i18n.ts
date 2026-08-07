@@ -4,18 +4,17 @@
 // pulling server-only code or the full translation payload into the browser
 // bundle. Server-side translation lives in lib/i18n-server.ts.
 
-export type Locale = 'en' | 'ru' | 'kk';
+export type Locale = 'en' | 'ru';
 
-export const LOCALES: Locale[] = ['en', 'ru', 'kk'];
+export const LOCALES: Locale[] = ['en', 'ru'];
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
   ru: 'Русский',
-  kk: 'Қазақша',
 };
 
 export const LOCALE_COOKIE = 'coop_locale';
 
 export function isLocale(value: string | undefined | null): value is Locale {
-  return value === 'en' || value === 'ru' || value === 'kk';
+  return value === 'en' || value === 'ru';
 }

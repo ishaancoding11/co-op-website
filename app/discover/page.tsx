@@ -2,12 +2,14 @@ import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { EmptyState, LinkButton } from '@/components/ui';
 import { SwipeDeck, type DeckCard } from './swipe-deck';
-import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
+import { categoryLabel, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 
 export default async function Discover() {
   const { userId, business, supabase } = await getViewer();
   if (!userId) redirect('/login?role=business');
   if (!business) redirect('/onboarding/business');
+  const locale = await getLocale();
 
   const { data: acted } = await supabase.from('matches')
     .select('creative_id, business_action').eq('business_id', userId).not('business_action', 'is', null);
@@ -30,7 +32,7 @@ export default async function Discover() {
     return {
       id: c.user_id,
       name: displayNameFor((c.users as { display_name: string | null } | null)?.display_name),
-      categories: (c.categories as CreativeCategory[]).map(x => CATEGORY_LABELS[x]),
+      categories: (c.categories as CreativeCategory[]).map(x => categoryLabel(x, locale)),
       neighborhood: c.neighborhood,
       bio: c.bio,
       price: priceRange(c.rate_min, c.rate_max, c.currency),

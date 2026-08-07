@@ -4,13 +4,9 @@ import { Card, Tag, StatusBadge, VerifiedBadge, EmptyState, LinkButton } from '@
 import { Dropdown, LocationSelect } from '@/components/dropdown';
 import { SaveJobButton } from '@/components/save-job-button';
 import { RangeSlider } from '@/components/range-slider';
-import { ALL_CATEGORIES, CATEGORY_LABELS, priceRange, type CreativeCategory, type Job } from '@/lib/types';
+import { ALL_CATEGORIES, categoryLabel, priceRange, type Job } from '@/lib/types';
 import { getT } from '@/lib/i18n-server';
-
-const CATEGORY_ICON: Record<CreativeCategory, string> = {
-  photographer: '📷', graphic_designer: '🎨', videographer: '🎬',
-  brand_designer: '🏷️', muralist: '🖌️', content_creator: '📱', musician: '🎵',
-};
+import { CategoryIcon } from '@/components/category-icon';
 
 function daysRemaining(deadline: string | null): string | null {
   if (!deadline) return null;
@@ -25,7 +21,7 @@ export default async function JobFeed({ searchParams }: {
 }) {
   const sp = await searchParams;
   const { userId, activeRole, creative, supabase } = await getViewer();
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   let q = supabase.from('jobs').select('*, business_profiles(business_name, neighborhood, is_verified, logo_url)').eq('status', 'open').order('created_at', { ascending: false });
   if (sp.category) q = q.eq('category', sp.category);
@@ -101,7 +97,7 @@ export default async function JobFeed({ searchParams }: {
       <form className="mt-4 flex flex-wrap gap-2" role="search" aria-label="Filter jobs">
         <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
           leadingOptions={[{ value: '', label: 'All categories' }]}
-          options={ALL_CATEGORIES.map(c => ({ value: c, label: CATEGORY_LABELS[c] }))} />
+          options={ALL_CATEGORIES.map(c => ({ value: c, label: categoryLabel(c, locale) }))} />
         <LocationSelect name="location" defaultValue={sp.location} allowAny className="w-44" ariaLabel="Location" />
         <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
           <RangeSlider nameMin="price_min" nameMax="price_max" label="budget"
@@ -122,11 +118,11 @@ export default async function JobFeed({ searchParams }: {
       {!jobs?.length ? (
         <EmptyState title={t('jobs.empty')} body="Check back soon — or make yourself discoverable so businesses find you first." />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 stagger">
           {(jobs as (Job & { business_profiles: { business_name: string; neighborhood: string | null; is_verified: boolean } | null })[]).map(j => {
             const remaining = daysRemaining(j.deadline);
             return (
-              <div key={j.id} className="relative group">
+              <div key={j.id} className="relative group press">
                 {userId && activeRole === 'creative' && (
                   <SaveJobButton jobId={j.id} initialSaved={savedIds.has(j.id)} className="absolute top-3 right-3 z-10" />
                 )}
@@ -134,9 +130,9 @@ export default async function JobFeed({ searchParams }: {
                   <span className="absolute top-3 left-3 z-10 rounded-full bg-gold text-white text-[10px] font-semibold px-2 py-0.5 shadow">Featured</span>
                 )}
                 <Link href={`/jobs/${j.id}`} className="block h-full">
-                  <Card className="overflow-hidden h-full flex flex-col hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
-                    <div className="h-40 bg-sea-soft flex items-center justify-center relative">
-                      <span className="text-5xl" aria-hidden>{CATEGORY_ICON[j.category]}</span>
+                  <Card className="overflow-hidden h-full flex flex-col shadow-[var(--shadow-sm)] transition-shadow duration-200 ease-[var(--ease-out)] group-hover:shadow-[var(--shadow-md)]">
+                    <div className="h-40 bg-sea-soft flex items-center justify-center relative text-sea/70">
+                      <CategoryIcon category={j.category} size={44} />
                       {priceRange(j.budget_min, j.budget_max, j.currency) && (
                         <span className="absolute bottom-3 left-3 rounded-lg bg-foreground/85 text-background px-2.5 py-1 text-xs font-semibold backdrop-blur">
                           {priceRange(j.budget_min, j.budget_max, j.currency)}
@@ -157,7 +153,7 @@ export default async function JobFeed({ searchParams }: {
                         <p className="text-xs text-muted mt-0.5">{j.location ?? ''} · <span className="underline underline-offset-2">Sign in to see who&rsquo;s hiring</span></p>
                       )}
                       <div className="flex flex-wrap gap-1 mt-2">
-                        <Tag tone="accent">{CATEGORY_LABELS[j.category]}</Tag>
+                        <Tag tone="accent">{categoryLabel(j.category, locale)}</Tag>
                         {appliedIds.has(j.id) && <StatusBadge status="applied" />}
                       </div>
                       <p className="text-sm text-muted mt-2 line-clamp-2 flex-1">{j.description}</p>

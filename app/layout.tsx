@@ -3,8 +3,17 @@ import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 
-const display = Fraunces({ variable: "--font-display", subsets: ["latin"] });
-const body = Inter({ variable: "--font-body", subsets: ["latin"] });
+const display = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT", "WONK"],
+  style: ["normal", "italic"],
+});
+const body = Inter({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const APP_DESCRIPTION =
   "Co-op is the marketplace that connects small businesses with local freelance creatives — photographers, designers, videographers, and more — for paid work. Swipe to discover, match, and book directly. No platform fees, ever.";

@@ -53,7 +53,7 @@ export function SignupGate() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-foreground/30 backdrop-blur-md"
       role="dialog" aria-modal="true" aria-label="Create a free Co-op account">
       <div className="bg-card rounded-3xl border border-line shadow-[0_16px_60px_rgba(45,42,38,0.25)] p-8 max-w-md w-full text-center">
-        <img src="/coop-logo-icon.svg" alt="" width={44} height={44} className="mx-auto rounded-xl" />
+        <img src="/coop-logo.png" alt="" width={44} height={44} className="mx-auto" />
         <h2 className="font-display text-2xl mt-4">Find your local creative match</h2>
         <p className="text-sm text-muted mt-2">
           Join Co-op free to see every local creative and job, match, and message directly. No fees, ever.

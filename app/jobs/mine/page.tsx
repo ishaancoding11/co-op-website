@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, StatusBadge, EmptyState, LinkButton, Tag } from '@/components/ui';
-import { CATEGORY_LABELS, priceRange, type Job } from '@/lib/types';
+import { categoryLabel, priceRange, type Job } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 
 export default async function MyJobs() {
   const { userId, business, supabase } = await getViewer();
   if (!userId) redirect('/login?role=business');
   if (!business) redirect('/onboarding/business');
+  const locale = await getLocale();
 
   const { data: jobs } = await supabase.from('jobs').select('*').eq('business_id', userId).order('created_at', { ascending: false });
   const jobIds = (jobs ?? []).map(j => j.id);
@@ -33,7 +35,7 @@ export default async function MyJobs() {
                 <Card className="p-5 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                   <div>
                     <h2 className="font-semibold group-hover:underline underline-offset-2">{j.title}</h2>
-                    <p className="text-xs text-muted mt-0.5">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
+                    <p className="text-xs text-muted mt-0.5">{categoryLabel(j.category, locale)} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Tag tone={count ? 'accent' : 'neutral'}>{count} applicant{count === 1 ? '' : 's'}</Tag>

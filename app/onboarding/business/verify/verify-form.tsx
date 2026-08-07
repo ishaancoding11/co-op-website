@@ -3,14 +3,15 @@
 import { useActionState } from 'react';
 import { startVerification } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 
 export function VerifyForm() {
   const [state, action, pending] = useActionState(startVerification, {});
   if (state?.sent) {
     return (
       <div className="text-center py-6">
-        <p className="text-2xl" aria-hidden>📬</p>
-        <p className="font-medium mt-2">Check your inbox</p>
+        <span className="mx-auto grid place-items-center h-11 w-11 rounded-2xl bg-sea-soft text-sea" aria-hidden><LineIcon name="mail" size={22} /></span>
+        <p className="font-medium mt-3">Check your inbox</p>
         <p className="text-sm text-muted mt-1">We sent a confirmation link. Click it and your verified badge appears everywhere.</p>
       </div>
     );

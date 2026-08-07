@@ -6,29 +6,29 @@ export function Button({ children, variant = 'primary', size = 'md', className =
   children: ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; size?: 'sm' | 'md' | 'lg'; className?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const v = {
-    primary: 'bg-foreground text-background hover:opacity-85',
-    secondary: 'bg-accent-soft text-foreground hover:bg-line',
+    primary: 'bg-foreground text-background shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] active:translate-y-0',
+    secondary: 'bg-accent-soft text-accent-deep hover:bg-[var(--gold-soft)]',
     ghost: 'bg-transparent text-foreground hover:bg-line/60 border border-line',
     danger: 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100',
   }[variant];
-  const s = { sm: 'px-3 py-1.5 text-sm', md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' }[size];
-  return <button className={`rounded-full font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${v} ${s} ${className}`} {...props}>{children}</button>;
+  const s = { sm: 'px-3.5 py-1.5 text-sm', md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' }[size];
+  return <button className={`rounded-full font-medium transition-[transform,box-shadow,background-color,opacity] duration-200 ease-[var(--ease-out)] active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:active:scale-100 ${v} ${s} ${className}`} {...props}>{children}</button>;
 }
 
 export function LinkButton({ href, children, variant = 'primary', size = 'md', className = '' }: {
   href: string; children: ReactNode; variant?: 'primary' | 'secondary' | 'ghost'; size?: 'sm' | 'md' | 'lg'; className?: string;
 }) {
   const v = {
-    primary: 'bg-foreground text-background hover:opacity-85',
-    secondary: 'bg-accent-soft text-foreground hover:bg-line',
+    primary: 'bg-foreground text-background shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]',
+    secondary: 'bg-accent-soft text-accent-deep hover:bg-[var(--gold-soft)]',
     ghost: 'bg-transparent text-foreground hover:bg-line/60 border border-line',
   }[variant];
-  const s = { sm: 'px-3 py-1.5 text-sm', md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' }[size];
-  return <Link href={href} className={`inline-block rounded-full font-medium transition-all ${v} ${s} ${className}`}>{children}</Link>;
+  const s = { sm: 'px-3.5 py-1.5 text-sm', md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' }[size];
+  return <Link href={href} className={`inline-block rounded-full font-medium transition-[transform,box-shadow,background-color,opacity] duration-200 ease-[var(--ease-out)] active:scale-[0.97] ${v} ${s} ${className}`}>{children}</Link>;
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`bg-card rounded-3xl border border-line shadow-[0_2px_16px_rgba(45,42,38,0.05)] ${className}`}>{children}</div>;
+  return <div className={`bg-card rounded-3xl border border-line shadow-[var(--shadow-sm)] ${className}`}>{children}</div>;
 }
 
 export function Tag({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'accent' | 'sea' }) {
@@ -88,9 +88,8 @@ export function StatusBadge({ status }: { status: string }) {
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
     <div className="text-center py-16 px-6">
-      <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center" aria-hidden>
-        <img src="/coop-logo-full.svg" alt="" width={34} height={28} />
-      </div>
+      <img src="/coop-logo.png" alt="" width={52} height={52} className="mx-auto mb-4" aria-hidden />
+
       <h2 className="text-lg font-semibold">{title}</h2>
       {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}
       {action && <div className="mt-5">{action}</div>}

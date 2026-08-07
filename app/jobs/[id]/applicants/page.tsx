@@ -3,12 +3,15 @@ import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { setApplicationStatus } from '@/lib/actions';
 import { Card, Avatar, StatusBadge, Rating, EmptyState, LinkButton, Tag } from '@/components/ui';
-import { CATEGORY_LABELS, displayNameFor, type CreativeCategory } from '@/lib/types';
+import { categoryLabel, displayNameFor, type CreativeCategory } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
+import { LineIcon, mediaIcon } from '@/components/line-icons';
 
 export default async function Applicants({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login?role=business');
+  const locale = await getLocale();
 
   const { data: job } = await supabase.from('jobs').select('*').eq('id', id).eq('business_id', userId).maybeSingle();
   if (!job) notFound();
@@ -53,7 +56,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
                         <StatusBadge status={a.application_status ?? 'applied'} />
                       </div>
                     </div>
-                    <p className="text-xs text-muted">{cp?.neighborhood} · {(cp?.categories ?? []).map(c => CATEGORY_LABELS[c]).join(', ')}</p>
+                    <p className="text-xs text-muted">{cp?.neighborhood} · {(cp?.categories ?? []).map(c => categoryLabel(c, locale)).join(', ')}</p>
                     {a.pitch && <p className="text-sm mt-2 bg-background rounded-xl px-3.5 py-2.5">{a.pitch}</p>}
                     {((a.pitch_portfolio_ids as string[] | null) ?? []).length > 0 && (
                       <div className="flex gap-2 mt-2 overflow-x-auto">
@@ -61,7 +64,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
                           <figure key={item.id} className="shrink-0 w-24">
                             {item.media_type === 'image' && item.media_url
                               ? <img src={item.media_url} alt={item.caption ?? 'Shared portfolio piece'} className="h-16 w-24 object-cover rounded-lg border border-line" />
-                              : <div className="h-16 w-24 rounded-lg border border-line bg-sea-soft flex items-center justify-center" aria-hidden>{item.media_type === 'video' ? '🎬' : item.media_type === 'audio' ? '🎵' : '🔗'}</div>}
+                              : <div className="h-16 w-24 rounded-lg border border-line bg-sea-soft flex items-center justify-center text-sea/70"><LineIcon name={mediaIcon(item.media_type)} size={20} /></div>}
                             <figcaption className="text-[10px] text-muted truncate mt-0.5">{item.caption ?? ''}</figcaption>
                           </figure>
                         ))}

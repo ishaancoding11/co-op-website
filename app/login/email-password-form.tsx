@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { setRole } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 
 export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
   role?: string; next?: string; initialMode?: 'login' | 'signup';
@@ -54,8 +55,8 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
   if (checkEmail) {
     return (
       <div className="text-center py-4">
-        <p className="text-2xl" aria-hidden>📬</p>
-        <p className="font-medium mt-2">Check your inbox</p>
+        <span className="mx-auto grid place-items-center h-11 w-11 rounded-2xl bg-sea-soft text-sea" aria-hidden><LineIcon name="mail" size={22} /></span>
+        <p className="font-medium mt-3">Check your inbox</p>
         <p className="text-sm text-muted mt-1">We sent a confirmation link to {email}. Confirm it, then come back and log in.</p>
       </div>
     );

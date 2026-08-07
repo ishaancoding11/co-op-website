@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { getViewer } from '@/lib/auth';
 import { Avatar, IconBell, IconGear, IconHeart, IconPlus, IconSearch } from './ui';
-import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
+import { ALL_CATEGORIES, categoryLabel } from '@/lib/types';
 import { SignupGate } from './signup-gate';
+import { BottomNav } from './bottom-nav';
 import { GetStartedButton } from './get-started-button';
 import { getT } from '@/lib/i18n-server';
 import { LanguageSwitcher } from './language-switcher';
@@ -46,7 +47,7 @@ export async function Nav() {
   const logoHref = activeRole === 'business' ? '/browse' : activeRole === 'creative' ? '/jobs' : '/';
   const logo = (
     <Link href={logoHref} className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
-      <img src="/coop-logo-full.svg" alt="" width={38} height={32} />
+      <img src="/coop-logo.png" alt="" width={30} height={30} />
       Co<span className="text-accent">·</span>op
     </Link>
   );
@@ -56,7 +57,7 @@ export async function Nav() {
     return (
       <>
         <SignupGate />
-        <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-line/80 shadow-[0_1px_0_rgba(58,48,38,0.02)]">
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
             {logo}
             <nav className="flex items-center gap-2">
@@ -130,6 +131,12 @@ export async function Nav() {
     { href: '/dashboard', label: t('nav.bookings') },
     { href: '/portfolio', label: t('nav.portfolio') },
   ];
+  const bottomTabs = [
+    { href: '/jobs', label: t('nav.jobs'), icon: 'jobs' as const },
+    { href: '/matches', label: t('nav.matches'), icon: 'matches' as const },
+    { href: '/dashboard', label: t('nav.bookings'), icon: 'bookings' as const },
+    { href: '/portfolio', label: t('nav.portfolio'), icon: 'portfolio' as const },
+  ];
   return (
     <>
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
@@ -160,21 +167,13 @@ export async function Nav() {
             {ALL_CATEGORIES.map(c => (
               <Link key={c} href={`/jobs?category=${c}`}
                 className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
-                {CATEGORY_LABELS[c]}
+                {categoryLabel(c, locale)}
               </Link>
             ))}
           </div>
         </nav>
       </header>
-      <nav aria-label="Primary mobile" className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-line pb-[env(safe-area-inset-bottom)]">
-        <div className="flex justify-around">
-          {creativeTabs.map(t => (
-            <Link key={t.href} href={t.href} className="py-3 px-3 text-xs font-semibold text-muted hover:text-foreground">
-              {t.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <BottomNav tabs={bottomTabs} />
     </>
   );
 }

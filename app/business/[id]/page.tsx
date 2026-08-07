@@ -3,12 +3,15 @@ import { notFound, redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { creativeLikeBusiness } from '@/lib/actions';
 import { Card, Avatar, Tag, VerifiedBadge, Rating, StatusBadge, LinkButton, NoFeeNote } from '@/components/ui';
-import { CATEGORY_LABELS, displayNameFor, priceRange, type CreativeCategory, type Job, type Review } from '@/lib/types';
+import { categoryLabel, displayNameFor, priceRange, type CreativeCategory, type Job, type Review } from '@/lib/types';
+import { getLocale } from '@/lib/i18n-server';
 import { ReportBlock } from '@/components/report-block';
+import { LineIcon } from '@/components/line-icons';
 
 export default async function BusinessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { userId, creative, supabase } = await getViewer();
+  const locale = await getLocale();
   if (!userId) redirect(`/login?next=/business/${id}`);
 
   const { data: b } = await supabase.from('business_profiles').select('*').eq('user_id', id).maybeSingle();
@@ -55,17 +58,18 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="mt-3 space-y-1.5">
-            <p className="text-sm text-muted">
-              📍 {b.neighborhood ?? 'Newport Beach'}
-              {b.category ? <> · {b.category}</> : null}
+            <p className="text-sm text-muted flex items-center justify-center sm:justify-start flex-wrap gap-x-1.5 gap-y-1">
+              <LineIcon name="pin" size={15} className="text-muted/80" />
+              {b.neighborhood ?? 'Newport Beach'}
+              {b.category ? <><span aria-hidden>·</span>{b.category}</> : null}
               {b.budget_min != null && b.budget_max != null
-                ? <> · 💰 {priceRange(b.budget_min, b.budget_max, b.currency)}</>
-                : b.budget_band ? <> · 💰 {b.budget_band}</> : null}
+                ? <><span aria-hidden>·</span><LineIcon name="price" size={15} className="text-muted/80" />{priceRange(b.budget_min, b.budget_max, b.currency)}</>
+                : b.budget_band ? <><span aria-hidden>·</span><LineIcon name="price" size={15} className="text-muted/80" />{b.budget_band}</> : null}
             </p>
             {b.needs_description ? (
               <p className="text-sm">{b.needs_description}</p>
             ) : (b.needs as CreativeCategory[])?.length > 0 ? (
-              <p className="text-sm">Usually looking for: {(b.needs as CreativeCategory[]).map(n => CATEGORY_LABELS[n]).join(', ')}</p>
+              <p className="text-sm">Usually looking for: {(b.needs as CreativeCategory[]).map(n => categoryLabel(n, locale)).join(', ')}</p>
             ) : null}
             {(b.brand_vibe_tags ?? []).length > 0 && (
               <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start pt-1">
@@ -90,7 +94,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
                 <Card className="p-4 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
                   <div>
                     <p className="font-semibold">{j.title}</p>
-                    <p className="text-xs text-muted">{CATEGORY_LABELS[j.category]} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
+                    <p className="text-xs text-muted">{categoryLabel(j.category, locale)} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
                   </div>
                   <StatusBadge status={j.status} />
                 </Card>
