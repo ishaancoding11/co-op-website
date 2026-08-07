@@ -33,8 +33,15 @@ export function Dropdown({
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // Controlled usage (e.g. geolocation snapping the value programmatically).
-  useEffect(() => { if (value !== undefined) setInternal(value); }, [value]);
+  // Controlled usage (e.g. geolocation snapping the value programmatically):
+  // sync during render via a previous-prop marker rather than an effect, so the
+  // update lands before paint with no extra commit — React's recommended pattern
+  // for adjusting state to a changing prop.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== undefined && value !== prevValue) {
+    setPrevValue(value);
+    setInternal(value);
+  }
 
   useEffect(() => {
     if (!open) return;

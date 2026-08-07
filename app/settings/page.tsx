@@ -58,6 +58,14 @@ export default async function Settings() {
       </Card>
 
       <Card className="p-5 mt-4 flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-sm">Help & support</h2>
+          <p className="text-xs text-muted mt-1">Question or a problem with your account? Reach our team.</p>
+        </div>
+        <LinkButton href="/support" size="sm" variant="secondary">Contact support</LinkButton>
+      </Card>
+
+      <Card className="p-5 mt-4 flex items-center justify-between">
         <p className="text-sm text-muted">Signed in via Google</p>
         <form action={signOut}>
           <button className="rounded-full border border-line px-5 py-2 text-sm font-medium hover:bg-background">Sign out</button>

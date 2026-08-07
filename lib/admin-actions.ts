@@ -68,3 +68,9 @@ export async function unbanEmail(formData: FormData): Promise<void> {
   await supabase.rpc('admin_unban_email', { p_email: email, p_reason: reason || null });
   revalidatePath('/admin/users?kind=banned');
 }
+
+export async function resolveSupportTicket(ticketId: string, status: 'resolved' | 'dismissed') {
+  const { supabase } = await db();
+  await supabase.rpc('admin_resolve_support_ticket', { p_ticket: ticketId, p_status: status });
+  revalidatePath('/admin/support');
+}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { sendMessage } from '@/lib/actions';
+import { redactContacts } from '@/lib/guard-content';
 import type { Message } from '@/lib/types';
 
 export function Thread({ matchId, userId, initial, otherName }: {
@@ -11,6 +12,7 @@ export function Thread({ matchId, userId, initial, otherName }: {
   const [messages, setMessages] = useState<Message[]>(initial);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [maskedNotice, setMaskedNotice] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,12 +36,17 @@ export function Thread({ matchId, userId, initial, otherName }: {
     if (!body || sending) return;
     setSending(true);
     setDraft('');
-    const optimistic: Message = { id: `tmp-${Date.now()}`, match_id: matchId, sender_id: userId, body, created_at: new Date().toISOString(), read_at: null };
+    // Show the sender their own message already masked, matching what the server
+    // stores — so the bubble never briefly reveals a number the recipient won't see.
+    const clean = redactContacts(body);
+    const optimistic: Message = { id: `tmp-${Date.now()}`, match_id: matchId, sender_id: userId, body: clean, created_at: new Date().toISOString(), read_at: null };
     setMessages(prev => [...prev, optimistic]);
     const res = await sendMessage(matchId, body);
     if (res?.error) {
       setMessages(prev => prev.filter(m => m.id !== optimistic.id));
       setDraft(body);
+    } else if (res?.masked) {
+      setMaskedNotice(true);
     }
     setSending(false);
   };
@@ -62,6 +69,11 @@ export function Thread({ matchId, userId, initial, otherName }: {
         ))}
         <div ref={bottomRef} />
       </div>
+      {maskedNotice && (
+        <p className="text-[11px] text-muted text-center pb-1" role="status">
+          Contact details are hidden — keep the conversation on Co-op.
+        </p>
+      )}
       <form onSubmit={submit} className="flex gap-2 border-t border-line pt-3 pb-2 sticky bottom-0 bg-background">
         <input value={draft} onChange={e => setDraft(e.target.value)} placeholder={`Message ${otherName}…`}
           aria-label={`Message ${otherName}`}

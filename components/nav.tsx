@@ -5,6 +5,8 @@ import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 import { SignupGate } from './signup-gate';
 import { GetStartedButton } from './get-started-button';
 import { ModerationListener } from './moderation-listener';
+import { getT } from '@/lib/i18n-server';
+import { LanguageSwitcher } from './language-switcher';
 
 const iconBtnCls = 'rounded-full h-10 w-10 flex items-center justify-center text-muted hover:text-foreground hover:bg-line/50 transition-colors';
 
@@ -28,6 +30,8 @@ function UtilityIcons({ unread, profileHref, displayName, avatarUrl }: {
 
 export async function Nav() {
   const { userId, activeRole, creative, business, supabase } = await getViewer();
+  const { locale, t } = await getT();
+  const langSwitcher = <LanguageSwitcher current={locale} label={t('nav.language')} />;
   let unread = 0;
   let displayName = 'Me';
   if (userId) {
@@ -57,9 +61,10 @@ export async function Nav() {
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
             {logo}
             <nav className="flex items-center gap-2">
-              <Link href="/browse" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Browse creatives</Link>
-              <Link href="/jobs" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Browse jobs</Link>
-              <Link href="/login?mode=login" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Log in</Link>
+              <Link href="/browse" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.browseCreatives')}</Link>
+              <Link href="/jobs" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.browseJobs')}</Link>
+              {langSwitcher}
+              <Link href="/login?mode=login" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.login')}</Link>
               <GetStartedButton />
             </nav>
           </div>
@@ -81,9 +86,12 @@ export async function Nav() {
         <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
             {logo}
-            {staffRole && (
-              <Link href="/admin" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Staff</Link>
-            )}
+            <div className="flex items-center gap-2">
+              {langSwitcher}
+              {staffRole && (
+                <Link href="/admin" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Staff</Link>
+              )}
+            </div>
           </div>
         </header>
       </>
@@ -102,12 +110,12 @@ export async function Nav() {
   // ===== Business shell: hiring toolbar, no category strip =====
   if (activeRole === 'business') {
     const links = [
-      { href: '/browse', label: 'Browse creatives' },
-      { href: '/discover', label: 'Discover' },
-      { href: '/jobs/mine', label: 'My jobs & applicants' },
-      { href: '/matches', label: 'Matches' },
-      { href: '/dashboard', label: 'Bookings' },
-      { href: '/billing', label: 'Billing' },
+      { href: '/browse', label: t('nav.browseCreatives') },
+      { href: '/discover', label: t('nav.discover') },
+      { href: '/jobs/mine', label: t('nav.myJobs') },
+      { href: '/matches', label: t('nav.matches') },
+      { href: '/dashboard', label: t('nav.bookings') },
+      { href: '/billing', label: t('nav.billing') },
     ];
     return (
       <>
@@ -125,8 +133,9 @@ export async function Nav() {
             <div className="flex items-center gap-1 ml-auto">
               <Link href="/jobs/new"
                 className="inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-4 pr-5 py-2.5 text-sm font-semibold hover:opacity-85 shadow-sm mr-2 whitespace-nowrap">
-                <IconPlus /> Post a job
+                <IconPlus /> {t('nav.postJob')}
               </Link>
+              <div className="hidden sm:block mr-1">{langSwitcher}</div>
               <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
             </div>
           </div>
@@ -145,10 +154,10 @@ export async function Nav() {
 
   // ===== Creative shell: search + category discovery, bottom tabs on mobile =====
   const creativeTabs = [
-    { href: '/jobs', label: 'Jobs' },
-    { href: '/matches', label: 'Matches' },
-    { href: '/dashboard', label: 'Bookings' },
-    { href: '/portfolio', label: 'Portfolio' },
+    { href: '/jobs', label: t('nav.jobs') },
+    { href: '/matches', label: t('nav.matches') },
+    { href: '/dashboard', label: t('nav.bookings') },
+    { href: '/portfolio', label: t('nav.portfolio') },
   ];
   return (
     <>
@@ -158,25 +167,26 @@ export async function Nav() {
           {logo}
           <form action="/jobs" role="search" className="hidden sm:flex flex-1 max-w-md">
             <div className="flex w-full rounded-full border border-line bg-card overflow-hidden focus-within:border-accent">
-              <input name="q" placeholder="Search jobs…" aria-label="Search jobs"
+              <input name="q" placeholder={t('nav.searchJobs')} aria-label={t('nav.searchJobs')}
                 className="flex-1 px-4 py-2 text-sm bg-transparent placeholder:text-muted/70 focus:outline-none" />
               <button className="px-4 bg-foreground text-background hover:opacity-85 flex items-center" aria-label="Search"><IconSearch /></button>
             </div>
           </form>
           <div className="flex items-center gap-1 ml-auto">
             <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 mr-2">
-              {[...creativeTabs, { href: '/billing', label: 'Billing' }].map(t => (
-                <Link key={t.href} href={t.href} className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50">
-                  {t.label}
+              {[...creativeTabs, { href: '/billing', label: t('nav.billing') }].map(tab => (
+                <Link key={tab.href} href={tab.href} className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50">
+                  {tab.label}
                 </Link>
               ))}
             </nav>
+            <div className="hidden sm:block mr-1">{langSwitcher}</div>
             <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
           </div>
         </div>
         <nav aria-label="Job categories" className="border-t border-line/70">
           <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href="/jobs" className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50">All</Link>
+            <Link href="/jobs" className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50">{t('nav.all')}</Link>
             {ALL_CATEGORIES.map(c => (
               <Link key={c} href={`/jobs?category=${c}`}
                 className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">

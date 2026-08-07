@@ -83,11 +83,28 @@ export type BusinessProfile = {
   user_id: string; business_name: string; category: string | null; neighborhood: string | null;
   needs: CreativeCategory[]; needs_description?: string | null; budget_band: string | null;
   budget_min?: number | null; budget_max?: number | null;
+  registration_number?: string | null;
   brand_vibe_tags: string[] | null;
   logo_url: string | null; verification_email: string | null;
   is_verified: boolean; verified_at: string | null;
   users?: UserRow;
 };
+
+/**
+ * Validate + normalise a business's EIN for storage. Co-op calls no
+ * government registry to confirm it's real — there is no free one — so this
+ * only checks the shape (9 digits), enough to catch a typo or a phone number
+ * typed in the wrong box. The stored value is normalised to digits only.
+ * Optional field: an empty input returns { value: null }, not an error.
+ */
+export function validateRegistrationNumber(raw: string | null | undefined): { value: string | null; error?: string } {
+  const trimmed = (raw ?? '').trim();
+  if (!trimmed) return { value: null };
+  const digits = trimmed.replace(/[\s-]/g, '');
+  if (!/^\d+$/.test(digits)) return { value: null, error: 'EIN should contain only digits.' };
+  if (digits.length !== 9) return { value: null, error: 'EIN must be 9 digits.' };
+  return { value: digits };
+}
 
 export type Job = {
   id: string; business_id: string; title: string; description: string;
