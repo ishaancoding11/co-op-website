@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { getViewer } from '@/lib/auth';
+import { getStaffRole, getViewer } from '@/lib/auth';
 import { Avatar, IconBell, IconGear, IconHeart, IconPlus, IconSearch } from './ui';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 import { SignupGate } from './signup-gate';
 import { GetStartedButton } from './get-started-button';
+import { ModerationListener } from './moderation-listener';
 
 const iconBtnCls = 'rounded-full h-10 w-10 flex items-center justify-center text-muted hover:text-foreground hover:bg-line/50 transition-colors';
 
@@ -48,7 +49,7 @@ export async function Nav() {
   );
 
   // ===== Signed out =====
-  if (!userId || !activeRole) {
+  if (!userId) {
     return (
       <>
         <SignupGate />
@@ -61,6 +62,28 @@ export async function Nav() {
               <Link href="/login?mode=login" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Log in</Link>
               <GetStartedButton />
             </nav>
+          </div>
+        </header>
+      </>
+    );
+  }
+
+  // ===== Signed in, no business/creative profile =====
+  // Staff-only accounts never get a coop_role cookie (they skip onboarding
+  // entirely — see auth/callback/route.ts), so activeRole is null here even
+  // though the visitor is authenticated. They must never see the anonymous
+  // marketing shell or the SignupGate popup.
+  if (!activeRole) {
+    const { staffRole } = await getStaffRole();
+    return (
+      <>
+        <ModerationListener userId={userId} />
+        <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
+            {logo}
+            {staffRole && (
+              <Link href="/admin" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Staff</Link>
+            )}
           </div>
         </header>
       </>
@@ -87,33 +110,36 @@ export async function Nav() {
       { href: '/billing', label: 'Billing' },
     ];
     return (
-      <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-5">
-          {logo}
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-0.5">
-            {links.map(l => (
-              <Link key={l.href} href={l.href} className="rounded-full px-3.5 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
-                {l.label}
+      <>
+        <ModerationListener userId={userId} />
+        <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-5">
+            {logo}
+            <nav aria-label="Primary" className="hidden lg:flex items-center gap-0.5">
+              {links.map(l => (
+                <Link key={l.href} href={l.href} className="rounded-full px-3.5 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex items-center gap-1 ml-auto">
+              <Link href="/jobs/new"
+                className="inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-4 pr-5 py-2.5 text-sm font-semibold hover:opacity-85 shadow-sm mr-2 whitespace-nowrap">
+                <IconPlus /> Post a job
               </Link>
-            ))}
+              <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
+            </div>
+          </div>
+          {/* Mobile business toolbar */}
+          <nav aria-label="Primary mobile" className="lg:hidden border-t border-line/70">
+            <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {links.map(l => (
+                <Link key={l.href} href={l.href} className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">{l.label}</Link>
+              ))}
+            </div>
           </nav>
-          <div className="flex items-center gap-1 ml-auto">
-            <Link href="/jobs/new"
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-4 pr-5 py-2.5 text-sm font-semibold hover:opacity-85 shadow-sm mr-2 whitespace-nowrap">
-              <IconPlus /> Post a job
-            </Link>
-            <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
-          </div>
-        </div>
-        {/* Mobile business toolbar */}
-        <nav aria-label="Primary mobile" className="lg:hidden border-t border-line/70">
-          <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {links.map(l => (
-              <Link key={l.href} href={l.href} className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">{l.label}</Link>
-            ))}
-          </div>
-        </nav>
-      </header>
+        </header>
+      </>
     );
   }
 
@@ -126,6 +152,7 @@ export async function Nav() {
   ];
   return (
     <>
+      <ModerationListener userId={userId} />
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
         <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-4">
           {logo}

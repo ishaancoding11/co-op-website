@@ -47,3 +47,24 @@ export async function removeJob(formData: FormData): Promise<void> {
   await supabase.rpc('admin_remove_job', { p_job: jobId, p_reason: reason });
   revalidatePath('/admin/jobs');
 }
+
+export async function deleteAndBanUser(formData: FormData): Promise<void> {
+  const { supabase } = await db();
+  const userId = formData.get('userId') as string;
+  const reason = formData.get('reason') as string;
+  if (!userId || !reason?.trim()) return;
+
+  await supabase.rpc('admin_delete_and_ban_user', { p_user: userId, p_reason: reason });
+  revalidatePath('/admin/users');
+  revalidatePath('/admin/users?kind=banned');
+}
+
+export async function unbanEmail(formData: FormData): Promise<void> {
+  const { supabase } = await db();
+  const email = formData.get('email') as string;
+  const reason = formData.get('reason') as string;
+  if (!email) return;
+
+  await supabase.rpc('admin_unban_email', { p_email: email, p_reason: reason || null });
+  revalidatePath('/admin/users?kind=banned');
+}

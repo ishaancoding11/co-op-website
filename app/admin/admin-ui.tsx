@@ -1,4 +1,4 @@
-import { setAccountStatus } from '@/lib/admin-actions';
+import { deleteAndBanUser, setAccountStatus, unbanEmail } from '@/lib/admin-actions';
 import { Card, inputCls } from '@/components/ui';
 
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -38,6 +38,8 @@ export function AdminStatusBadge({ status }: { status: string }) {
     ? 'bg-sea-soft text-sea'
     : status === 'pending' || status === 'suspended'
     ? 'bg-accent-soft text-accent'
+    : status === 'banned'
+    ? 'bg-red-50 text-red-700'
     : 'bg-line text-muted';
   return <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${tone}`}>{status.replace(/_/g, ' ')}</span>;
 }
@@ -70,6 +72,75 @@ export function StatusForm({ userId, status }: { userId: string; status: string 
         <p className="mt-1.5 text-xs text-muted">Nothing is deleted. New job posts, accepted agreements, and messages are blocked; existing ones stay readable.</p>
       )}
     </details>
+  );
+}
+
+/**
+ * Delete & ban — separate from StatusForm on purpose. Suspend keeps data and
+ * can be reversed with one click; this deletes the account's data outright
+ * (everything cascading from their users row — profile, jobs, matches,
+ * messages, reviews, agreements) and permanently blocks the email from
+ * signing up again. "Unban" (BannedEmails below) only lifts that future
+ * block — it can never bring the deleted data back, so the confirmation
+ * copy says so plainly. Admin-only, same tier as suspend.
+ */
+export function DeleteBanForm({ userId }: { userId: string }) {
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer text-xs text-red-700 hover:text-red-800">Delete &amp; ban this account</summary>
+      <form action={deleteAndBanUser} className="mt-2 flex flex-wrap items-center gap-2"
+        onSubmit={e => { if (!confirm('This permanently deletes all of this account’s data and blocks the email from signing up again. This cannot be undone. Continue?')) e.preventDefault(); }}>
+        <input type="hidden" name="userId" value={userId} />
+        <input className={`${inputCls} max-w-sm flex-1`} name="reason" required minLength={3} maxLength={500}
+          placeholder="Reason (kept in the audit log)" />
+        <button className="rounded-full px-4 py-2 text-sm font-medium shrink-0 bg-red-600 text-white hover:bg-red-700">
+          Delete &amp; ban
+        </button>
+      </form>
+      <p className="mt-1.5 text-xs text-muted">
+        Deletes the account and all of its data (profile, jobs, matches, messages, reviews, agreements) and
+        permanently blocks the email from creating a new account. You can lift the email block later from the
+        Banned tab, but deleted data is gone for good.
+      </p>
+    </details>
+  );
+}
+
+export function BannedEmails({ rows, isAdmin }: {
+  rows: { email: string; reason: string; banned_at: string; banned_by_name: string | null; unbanned_at: string | null; unbanned_by_name: string | null }[];
+  isAdmin: boolean;
+}) {
+  if (!rows.length) return <p className="text-sm text-muted mt-4">No banned emails.</p>;
+  return (
+    <div className="space-y-3 mt-4">
+      {rows.map(r => {
+        const active = !r.unbanned_at;
+        return (
+          <Card key={r.email} className="p-4">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-semibold">{r.email}</span>
+              <AdminStatusBadge status={active ? 'banned' : 'unbanned'} />
+              <span className="text-xs text-muted">
+                banned {new Date(r.banned_at).toLocaleDateString('en-US')}{r.banned_by_name ? ` by ${r.banned_by_name}` : ''}
+              </span>
+            </div>
+            <p className="text-sm mt-1.5">{r.reason}</p>
+            {!active && (
+              <p className="text-xs text-muted mt-1">
+                Unbanned {new Date(r.unbanned_at!).toLocaleDateString('en-US')}{r.unbanned_by_name ? ` by ${r.unbanned_by_name}` : ''}
+              </p>
+            )}
+            {isAdmin && active && (
+              <form action={unbanEmail} className="mt-2 flex flex-wrap items-center gap-2">
+                <input type="hidden" name="email" value={r.email} />
+                <input className={`${inputCls} max-w-sm flex-1`} name="reason" maxLength={500} placeholder="Note (optional, kept in the audit log)" />
+                <button className="rounded-full px-4 py-2 text-sm font-medium shrink-0 bg-accent-soft text-accent hover:bg-line">Unban</button>
+              </form>
+            )}
+          </Card>
+        );
+      })}
+    </div>
   );
 }
 

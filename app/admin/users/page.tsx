@@ -5,7 +5,7 @@ import { getStaffRole } from '@/lib/auth';
 import { Card, Tag, Rating, EmptyState } from '@/components/ui';
 import { CATEGORY_LABELS, type CreativeCategory } from '@/lib/types';
 import { PLAN_LABELS } from '@/lib/plans';
-import { AdminStatusBadge, Metric, Pager, SearchBar, StatusForm } from '../admin-ui';
+import { AdminStatusBadge, BannedEmails, DeleteBanForm, Metric, Pager, SearchBar, StatusForm } from '../admin-ui';
 
 type CreativeRow = {
   user_id: string; display_name: string; neighborhood: string | null; categories: CreativeCategory[];
@@ -15,10 +15,14 @@ type BusinessRow = {
   user_id: string; business_name: string; neighborhood: string | null; is_verified: boolean;
   status: string; plan: keyof typeof PLAN_LABELS | null; jobs_published: number; joined_at: string;
 };
+type BannedRow = {
+  email: string; reason: string; banned_at: string; banned_by_name: string | null;
+  unbanned_at: string | null; unbanned_by_name: string | null;
+};
 
 export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ kind?: string; q?: string; page?: string }> }) {
   const { kind: kindParam, q, page: pageParam } = await searchParams;
-  const kind = kindParam === 'business' ? 'business' : 'creative';
+  const kind = kindParam === 'business' ? 'business' : kindParam === 'banned' ? 'banned' : 'creative';
   const page = Math.max(1, Number(pageParam) || 1);
   const perPage = 50;
   const search = q?.trim() || null;
@@ -29,19 +33,23 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
 
   const { data, error } = kind === 'creative'
     ? await supabase.rpc('admin_creatives', { p_search: search, p_limit: perPage, p_offset: (page - 1) * perPage })
-    : await supabase.rpc('admin_businesses', { p_search: search, p_limit: perPage, p_offset: (page - 1) * perPage });
+    : kind === 'business'
+    ? await supabase.rpc('admin_businesses', { p_search: search, p_limit: perPage, p_offset: (page - 1) * perPage })
+    : await supabase.rpc('admin_banned_emails', { p_limit: perPage, p_offset: (page - 1) * perPage });
 
   const creatives = kind === 'creative' ? ((data ?? []) as CreativeRow[]) : [];
   const businesses = kind === 'business' ? ((data ?? []) as BusinessRow[]) : [];
+  const banned = kind === 'banned' ? ((data ?? []) as BannedRow[]) : [];
 
   return (
     <div>
       <div className="flex gap-1 mb-4">
         <Link href="/admin/users?kind=creative" className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${kind === 'creative' ? 'bg-foreground text-background' : 'text-muted hover:bg-line/50'}`}>Creatives</Link>
         <Link href="/admin/users?kind=business" className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${kind === 'business' ? 'bg-foreground text-background' : 'text-muted hover:bg-line/50'}`}>Businesses</Link>
+        <Link href="/admin/users?kind=banned" className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${kind === 'banned' ? 'bg-foreground text-background' : 'text-muted hover:bg-line/50'}`}>Banned</Link>
       </div>
 
-      <SearchBar action="/admin/users" value={q} placeholder={`Search ${kind}s by name…`} hidden={{ kind }} />
+      {kind !== 'banned' && <SearchBar action="/admin/users" value={q} placeholder={`Search ${kind}s by name…`} hidden={{ kind }} />}
 
       {error ? <p className="text-sm text-red-700 mt-4">Could not load the list.</p> : null}
 
@@ -61,11 +69,12 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="mt-3"><Rating value={c.rating_avg} count={c.rating_count || undefined} /></div>
                 {isAdmin && <StatusForm userId={c.user_id} status={c.status} />}
+                {isAdmin && <DeleteBanForm userId={c.user_id} />}
               </Card>
             ))}
           </div>
         )
-      ) : (
+      ) : kind === 'business' ? (
         !businesses.length ? <EmptyState title={search ? 'Nobody matches that search' : 'No businesses yet'} /> : (
           <div className="space-y-3 mt-4">
             {businesses.map(b => (
@@ -81,13 +90,18 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                   <Metric label="Plan" value={b.plan ? PLAN_LABELS[b.plan] : 'Trial / expired'} />
                 </div>
                 {isAdmin && <StatusForm userId={b.user_id} status={b.status} />}
+                {isAdmin && <DeleteBanForm userId={b.user_id} />}
               </Card>
             ))}
           </div>
         )
+      ) : (
+        <BannedEmails rows={banned} isAdmin={isAdmin} />
       )}
 
-      <Pager page={page} count={kind === 'creative' ? creatives.length : businesses.length} perPage={perPage} extraParams={{ kind, ...(q ? { q } : {}) }} />
+      {kind !== 'banned' && (
+        <Pager page={page} count={kind === 'creative' ? creatives.length : businesses.length} perPage={perPage} extraParams={{ kind, ...(q ? { q } : {}) }} />
+      )}
     </div>
   );
 }
