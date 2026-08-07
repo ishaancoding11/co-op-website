@@ -18,7 +18,7 @@ export const PLAN_PRICING: Record<SubscriptionPlan, {
     features: ['Up to 5 job applications/acceptances per month', 'Full portfolio & profile', 'Direct messaging with businesses'],
   },
   creative_premium: {
-    monthly: 19.99, annual: null, annualSavingsLabel: null,
+    monthly: 19.99, annual: 199.99, annualSavingsLabel: 'Save $39.89/year (~17% off)',
     blurb: 'For creatives who want to be first in line.',
     features: ['Unlimited job applications/acceptances', 'Priority placement in search & browse', 'Full portfolio & profile'],
   },

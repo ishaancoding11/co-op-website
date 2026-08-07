@@ -27,13 +27,14 @@ export function stripe(): Stripe {
  */
 type BillingKey =
   | 'creative_basic_monthly' | 'creative_basic_annual'
-  | 'creative_premium_monthly'
+  | 'creative_premium_monthly' | 'creative_premium_annual'
   | 'business_standard_monthly' | 'business_standard_annual';
 
 const PRICE_ENV: Record<BillingKey, string> = {
   creative_basic_monthly: 'STRIPE_PRICE_CREATIVE_BASIC_MONTHLY',
   creative_basic_annual: 'STRIPE_PRICE_CREATIVE_BASIC_ANNUAL',
   creative_premium_monthly: 'STRIPE_PRICE_CREATIVE_PREMIUM_MONTHLY',
+  creative_premium_annual: 'STRIPE_PRICE_CREATIVE_PREMIUM_ANNUAL',
   business_standard_monthly: 'STRIPE_PRICE_BUSINESS_STANDARD_MONTHLY',
   business_standard_annual: 'STRIPE_PRICE_BUSINESS_STANDARD_ANNUAL',
 };
