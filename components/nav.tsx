@@ -66,7 +66,7 @@ export async function Nav() {
   const logoHref = activeRole === 'business' ? '/browse' : activeRole === 'creative' ? '/jobs' : '/';
   const logo = (
     <Link href={logoHref} className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
-      <img src="/coop-logo-full.svg" alt="" width={34} height={34} />
+      <img src="/coop-logo-full.png" alt="" width={34} height={34} />
       Co<span className="text-accent">·</span>op
     </Link>
   );

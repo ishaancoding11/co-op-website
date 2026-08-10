@@ -89,7 +89,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
   return (
     <div className="text-center py-16 px-6">
       <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center" aria-hidden>
-        <img src="/coop-logo-full.svg" alt="" width={32} height={32} />
+        <img src="/coop-logo-full.png" alt="" width={32} height={32} />
       </div>
       <h2 className="text-lg font-semibold">{title}</h2>
       {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}

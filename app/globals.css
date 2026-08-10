@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fefbf8;   /* just barely warm — not the old cream/sand */
   --foreground: #231f1d;   /* charcoal */
   --muted: #7a7370;
-  --card: #fdfcfb;         /* off-white */
+  --card: #ffffff;         /* pure white — pops slightly against the page */
   --line: #e8e5e2;
   --accent: #db6239;       /* sampled from the logo mark */
   --accent-soft: #faece7;
