@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { setRole } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
@@ -14,6 +15,7 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [banned, setBanned] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -24,6 +26,13 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
       const supabase = createClient();
 
       if (mode === 'signup') {
+        // Checked before attempting signUp() so a banned email gets a clear
+        // message instead of GoTrue's generic "Database error saving new
+        // user" (what the handle_new_user() trigger's block looks like from
+        // here — its real reason lives only in banned_emails, staff-only).
+        const { data: isBanned } = await supabase.rpc('is_email_banned', { p_email: email });
+        if (isBanned) { setBanned(true); return; }
+
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) { setError(signUpError.message); return; }
         if (!data.session) {
@@ -57,6 +66,18 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
         <p className="text-2xl" aria-hidden>📬</p>
         <p className="font-medium mt-2">Check your inbox</p>
         <p className="text-sm text-muted mt-1">We sent a confirmation link to {email}. Confirm it, then come back and log in.</p>
+      </div>
+    );
+  }
+
+  if (banned) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm">This email can’t be used to create an account.</p>
+        <p className="text-sm text-muted mt-2">
+          Think this was a mistake?{' '}
+          <Link href={`/appeal?email=${encodeURIComponent(email)}`} className="underline underline-offset-2 font-medium">Submit an appeal</Link>.
+        </p>
       </div>
     );
   }

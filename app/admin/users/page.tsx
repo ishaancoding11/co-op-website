@@ -5,7 +5,7 @@ import { getStaffRole } from '@/lib/auth';
 import { Card, Tag, Rating, EmptyState } from '@/components/ui';
 import { CATEGORY_LABELS, type CreativeCategory } from '@/lib/types';
 import { PLAN_LABELS } from '@/lib/plans';
-import { AdminStatusBadge, BannedEmails, DeleteBanForm, Metric, Pager, SearchBar, StatusForm } from '../admin-ui';
+import { ActionNotice, AdminStatusBadge, BannedEmails, DeleteBanForm, Metric, Pager, SearchBar, StatusForm, type BannedRow } from '../admin-ui';
 
 type CreativeRow = {
   user_id: string; display_name: string; neighborhood: string | null; categories: CreativeCategory[];
@@ -15,13 +15,9 @@ type BusinessRow = {
   user_id: string; business_name: string; neighborhood: string | null; is_verified: boolean;
   status: string; plan: keyof typeof PLAN_LABELS | null; jobs_published: number; joined_at: string;
 };
-type BannedRow = {
-  email: string; reason: string; banned_at: string; banned_by_name: string | null;
-  unbanned_at: string | null; unbanned_by_name: string | null;
-};
 
-export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ kind?: string; q?: string; page?: string }> }) {
-  const { kind: kindParam, q, page: pageParam } = await searchParams;
+export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ kind?: string; q?: string; page?: string; notice?: string; target?: string }> }) {
+  const { kind: kindParam, q, page: pageParam, notice, target: noticeTarget } = await searchParams;
   const kind = kindParam === 'business' ? 'business' : kindParam === 'banned' ? 'banned' : 'creative';
   const page = Math.max(1, Number(pageParam) || 1);
   const perPage = 50;
@@ -41,6 +37,9 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   const businesses = kind === 'business' ? ((data ?? []) as BusinessRow[]) : [];
   const banned = kind === 'banned' ? ((data ?? []) as BannedRow[]) : [];
 
+  const dismissSp = new URLSearchParams({ kind, ...(q ? { q } : {}), ...(page > 1 ? { page: String(page) } : {}) });
+  const dismissHref = `?${dismissSp}`;
+
   return (
     <div>
       <div className="flex gap-1 mb-4">
@@ -48,6 +47,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
         <Link href="/admin/users?kind=business" className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${kind === 'business' ? 'bg-foreground text-background' : 'text-muted hover:bg-line/50'}`}>Businesses</Link>
         <Link href="/admin/users?kind=banned" className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${kind === 'banned' ? 'bg-foreground text-background' : 'text-muted hover:bg-line/50'}`}>Banned</Link>
       </div>
+
+      <ActionNotice notice={notice} target={noticeTarget} dismissHref={dismissHref} />
 
       {kind !== 'banned' && <SearchBar action="/admin/users" value={q} placeholder={`Search ${kind}s by name…`} hidden={{ kind }} />}
 
@@ -68,8 +69,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                   <Tag tone="sea">{c.plan ? PLAN_LABELS[c.plan] : 'Trial / expired'}</Tag>
                 </div>
                 <div className="mt-3"><Rating value={c.rating_avg} count={c.rating_count || undefined} /></div>
-                {isAdmin && <StatusForm userId={c.user_id} status={c.status} />}
-                {isAdmin && <DeleteBanForm userId={c.user_id} />}
+                {isAdmin && <StatusForm userId={c.user_id} status={c.status} target={c.display_name} kind={kind} q={q} page={page} />}
+                {isAdmin && <DeleteBanForm userId={c.user_id} target={c.display_name} kind={kind} q={q} page={page} />}
               </Card>
             ))}
           </div>
@@ -89,8 +90,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                   <Metric label="Jobs published" value={String(b.jobs_published)} />
                   <Metric label="Plan" value={b.plan ? PLAN_LABELS[b.plan] : 'Trial / expired'} />
                 </div>
-                {isAdmin && <StatusForm userId={b.user_id} status={b.status} />}
-                {isAdmin && <DeleteBanForm userId={b.user_id} />}
+                {isAdmin && <StatusForm userId={b.user_id} status={b.status} target={b.business_name} kind={kind} q={q} page={page} />}
+                {isAdmin && <DeleteBanForm userId={b.user_id} target={b.business_name} kind={kind} q={q} page={page} />}
               </Card>
             ))}
           </div>

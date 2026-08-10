@@ -1,5 +1,38 @@
-import { deleteAndBanUser, setAccountStatus, unbanEmail } from '@/lib/admin-actions';
+import { deleteAndBanUser, resolveBanAppeal, setAccountStatus, unbanEmail } from '@/lib/admin-actions';
 import { Card, inputCls } from '@/components/ui';
+
+/** Hidden fields every roster-row form carries, so a redirect-based success
+ *  notice (see usersRedirect in lib/admin-actions.ts) can return the admin
+ *  to the same filtered/paginated view instead of resetting it. */
+function ListContext({ kind, q, page, target }: { kind?: string; q?: string; page?: number; target?: string }) {
+  return (
+    <>
+      {kind && <input type="hidden" name="kind" value={kind} />}
+      {q && <input type="hidden" name="q" value={q} />}
+      {page && page > 1 && <input type="hidden" name="page" value={page} />}
+      {target && <input type="hidden" name="target" value={target} />}
+    </>
+  );
+}
+
+const NOTICE_COPY: Record<string, string> = {
+  suspended: 'Account suspended.', reinstated: 'Account reinstated.',
+  banned: 'Account deleted and email banned.', unbanned: 'Email unbanned — they can sign up again.',
+};
+
+/** Server-rendered success banner, driven entirely by the ?notice=/&target=
+ *  query params a moderation action redirects to — no client JS involved.
+ *  Dismiss is a plain link with notice/target stripped but kind/q/page kept,
+ *  so closing the banner doesn't also reset whatever filter was active. */
+export function ActionNotice({ notice, target, dismissHref }: { notice?: string; target?: string; dismissHref: string }) {
+  if (!notice || !NOTICE_COPY[notice]) return null;
+  return (
+    <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-sea-soft text-sea px-4 py-2.5 text-sm">
+      <span>{NOTICE_COPY[notice]}{target ? ` (${target})` : ''}</span>
+      <a href={dismissHref} className="text-sea/70 hover:text-sea shrink-0" aria-label="Dismiss">✕</a>
+    </div>
+  );
+}
 
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -52,7 +85,9 @@ export function AdminStatusBadge({ status }: { status: string }) {
  * moderators can read these pages, but admin_set_account_status() refuses
  * them, so showing the form would offer a button that always fails.
  */
-export function StatusForm({ userId, status }: { userId: string; status: string }) {
+export function StatusForm({ userId, status, target, kind, q, page }: {
+  userId: string; status: string; target?: string; kind?: string; q?: string; page?: number;
+}) {
   const suspending = status !== 'suspended';
   return (
     <details className="mt-2">
@@ -62,6 +97,7 @@ export function StatusForm({ userId, status }: { userId: string; status: string 
       <form action={setAccountStatus} className="mt-2 flex flex-wrap items-center gap-2">
         <input type="hidden" name="userId" value={userId} />
         <input type="hidden" name="status" value={suspending ? 'suspended' : 'active'} />
+        <ListContext kind={kind} q={q} page={page} target={target} />
         <input className={`${inputCls} max-w-sm flex-1`} name="reason" required minLength={3} maxLength={500}
           placeholder="Reason (kept in the audit log)" />
         <button className={`rounded-full px-4 py-2 text-sm font-medium shrink-0 ${suspending ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-accent-soft text-accent hover:bg-line'}`}>
@@ -93,12 +129,15 @@ export function StatusForm({ userId, status }: { userId: string; status: string 
  * the warning copy below the button, matching the plain-server-actions
  * design already stated in lib/admin-actions.ts.
  */
-export function DeleteBanForm({ userId }: { userId: string }) {
+export function DeleteBanForm({ userId, target, kind, q, page }: {
+  userId: string; target?: string; kind?: string; q?: string; page?: number;
+}) {
   return (
     <details className="mt-2">
       <summary className="cursor-pointer text-xs text-red-700 hover:text-red-800">Delete &amp; ban this account</summary>
       <form action={deleteAndBanUser} className="mt-2 flex flex-wrap items-center gap-2">
         <input type="hidden" name="userId" value={userId} />
+        <ListContext kind={kind} q={q} page={page} target={target} />
         <input className={`${inputCls} max-w-sm flex-1`} name="reason" required minLength={3} maxLength={500}
           placeholder="Reason (kept in the audit log)" />
         <button className="rounded-full px-4 py-2 text-sm font-medium shrink-0 bg-red-600 text-white hover:bg-red-700">
@@ -114,10 +153,13 @@ export function DeleteBanForm({ userId }: { userId: string }) {
   );
 }
 
-export function BannedEmails({ rows, isAdmin }: {
-  rows: { email: string; reason: string; banned_at: string; banned_by_name: string | null; unbanned_at: string | null; unbanned_by_name: string | null }[];
-  isAdmin: boolean;
-}) {
+export type BannedRow = {
+  email: string; reason: string; banned_at: string; banned_by_name: string | null;
+  unbanned_at: string | null; unbanned_by_name: string | null;
+  appeal_id: string | null; appeal_message: string | null; appeal_status: string | null; appeal_created_at: string | null;
+};
+
+export function BannedEmails({ rows, isAdmin }: { rows: BannedRow[]; isAdmin: boolean }) {
   if (!rows.length) return <p className="text-sm text-muted mt-4">No banned emails.</p>;
   return (
     <div className="space-y-3 mt-4">
@@ -137,6 +179,28 @@ export function BannedEmails({ rows, isAdmin }: {
               <p className="text-xs text-muted mt-1">
                 Unbanned {new Date(r.unbanned_at!).toLocaleDateString('en-US')}{r.unbanned_by_name ? ` by ${r.unbanned_by_name}` : ''}
               </p>
+            )}
+            {r.appeal_id && (
+              <div className="mt-2.5 rounded-2xl bg-background border border-line p-3">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="text-xs font-semibold">Appeal</span>
+                  <AdminStatusBadge status={r.appeal_status ?? 'open'} />
+                  {r.appeal_created_at && (
+                    <span className="text-xs text-muted">{new Date(r.appeal_created_at).toLocaleDateString('en-US')}</span>
+                  )}
+                </div>
+                <p className="text-sm mt-1 whitespace-pre-wrap">{r.appeal_message}</p>
+                {isAdmin && r.appeal_status === 'open' && (
+                  <div className="flex gap-2 mt-2">
+                    <form action={resolveBanAppeal.bind(null, r.appeal_id, 'resolved')}>
+                      <button className="rounded-full bg-accent-soft text-accent px-4 py-1.5 text-sm font-medium hover:bg-line">Mark resolved</button>
+                    </form>
+                    <form action={resolveBanAppeal.bind(null, r.appeal_id, 'dismissed')}>
+                      <button className="rounded-full border border-line px-4 py-1.5 text-sm text-muted font-medium hover:bg-background">Dismiss</button>
+                    </form>
+                  </div>
+                )}
+              </div>
             )}
             {isAdmin && active && (
               <form action={unbanEmail} className="mt-2 flex flex-wrap items-center gap-2">

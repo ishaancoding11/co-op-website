@@ -13,7 +13,11 @@ export async function GET(request: NextRequest) {
   if (code) await supabase.auth.exchangeCodeForSession(code);
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL('/login', url.origin));
+  // No session after a code exchange most commonly means handle_new_user()'s
+  // banned-email check blocked account creation (0017_ban_appeals.sql) — the
+  // email isn't known at this point (creation never completed), so this can
+  // only show a generic notice, not a prefilled appeal link.
+  if (!user) return NextResponse.redirect(new URL('/login?blocked=1', url.origin));
   if (next) return NextResponse.redirect(new URL(next, url.origin));
 
   const [{ data: creative }, { data: business }, { data: staffRole }] = await Promise.all([

@@ -34,14 +34,33 @@ export async function Nav() {
   const langSwitcher = <LanguageSwitcher current={locale} label={t('nav.language')} />;
   let unread = 0;
   let displayName = 'Me';
+  let isSuspended = false;
+  let suspendReason: string | null = null;
   if (userId) {
     const [{ count }, { data: u }] = await Promise.all([
       supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false),
-      supabase.from('users').select('display_name').eq('id', userId).maybeSingle(),
+      supabase.from('users').select('display_name, status').eq('id', userId).maybeSingle(),
     ]);
     unread = count ?? 0;
     displayName = (activeRole === 'business' ? business?.business_name : u?.display_name) ?? u?.display_name ?? 'Me';
+    // Suspended (not deleted) accounts keep read access and their session —
+    // only the realtime popup fires when it happens live (ModerationListener);
+    // this is what shows the reason on every later visit, since a cold page
+    // load has no live event to react to.
+    isSuspended = u?.status === 'suspended';
+    if (isSuspended) {
+      const { data: latest } = await supabase.from('account_actions').select('reason')
+        .eq('user_id', userId).eq('action', 'suspended').order('created_at', { ascending: false }).limit(1).maybeSingle();
+      suspendReason = latest?.reason ?? null;
+    }
   }
+
+  const suspendedBanner = isSuspended ? (
+    <div className="bg-accent-soft text-accent text-sm px-4 py-2.5 text-center">
+      Your account is suspended.{suspendReason ? ` ${suspendReason}` : ''}{' '}
+      <Link href="/support" className="underline underline-offset-2 font-medium">Contact support</Link> if you think this is a mistake.
+    </div>
+  ) : null;
 
   // Logo routes to the role's home surface (business → browse creatives, creative → job feed)
   const logoHref = activeRole === 'business' ? '/browse' : activeRole === 'creative' ? '/jobs' : '/';
@@ -120,6 +139,7 @@ export async function Nav() {
     return (
       <>
         <ModerationListener userId={userId} />
+        {suspendedBanner}
         <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
           <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-5">
             {logo}
@@ -162,6 +182,7 @@ export async function Nav() {
   return (
     <>
       <ModerationListener userId={userId} />
+      {suspendedBanner}
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
         <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-4">
           {logo}
