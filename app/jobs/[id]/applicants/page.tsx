@@ -13,27 +13,33 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
   const { data: job } = await supabase.from('jobs').select('*').eq('id', id).eq('business_id', userId).maybeSingle();
   if (!job) notFound();
 
-  // creative_profiles is deliberately NOT embedded here (previously: "*,
-  // creative_profiles(...), users:creative_id(display_name)"). matches.
-  // creative_id is a NOT NULL FK, so PostgREST resolves that embed as an
-  // inner join — if creative_select's RLS hides the row (is_public = false),
-  // the whole matches row vanished from this query, even though the business
-  // has every right to see the application via matches_select. is_public
-  // governs browse/search discoverability, not visibility to a business the
-  // creative specifically applied to, so it's fetched as its own query
-  // instead (same pattern as reviews/attachedItems below) — a private
-  // profile just means less detail to show, never a missing application.
-  const { data: apps } = await supabase.from('matches')
-    .select('*, users:creative_id(display_name)')
+  // No embeds at all on this query — deliberately. It previously embedded
+  // creative_profiles (dropped: matches.creative_id is a NOT NULL FK, so
+  // PostgREST resolves that as an inner join, and creative_select's RLS
+  // hiding a private profile silently dropped the whole matches row even
+  // though matches_select would have allowed it — see the is_public fix).
+  // It also embedded users:creative_id(display_name) — dropped too, now
+  // that jobs/mine's equivalent count query (plain `.select('job_id')`, no
+  // embed at all) is confirmed to find this same row via the same RLS while
+  // this page still didn't: the only structural difference left between a
+  // working and a non-working query was this second embed, so it comes out
+  // the same way, fetched separately below alongside profiles. `error` is
+  // now logged instead of silently discarded, so if there's still a query
+  // failure, it shows up in the server logs instead of just reading as "no
+  // applications" with no way to tell the two apart.
+  const { data: apps, error: appsError } = await supabase.from('matches')
+    .select('*')
     .eq('job_id', id).eq('creative_action', 'liked')
     .order('created_at', { ascending: false });
+  if (appsError) console.error('[applicants] matches query failed:', appsError.message);
 
   const creativeIds = (apps ?? []).map(a => a.creative_id);
   const attachedIds = (apps ?? []).flatMap(a => (a.pitch_portfolio_ids as string[] | null) ?? []);
-  const [{ data: reviews }, { data: attachedItems }, { data: profiles }] = await Promise.all([
+  const [{ data: reviews }, { data: attachedItems }, { data: profiles }, { data: creativeUsers }] = await Promise.all([
     creativeIds.length ? supabase.from('reviews').select('reviewee_id, stars').in('reviewee_id', creativeIds) : Promise.resolve({ data: [] }),
     attachedIds.length ? supabase.from('portfolio_items').select('id, media_url, media_type, caption').in('id', attachedIds) : Promise.resolve({ data: [] }),
     creativeIds.length ? supabase.from('creative_profiles').select('user_id, neighborhood, categories, avatar_url, rate_min, rate_max').in('user_id', creativeIds) : Promise.resolve({ data: [] }),
+    creativeIds.length ? supabase.from('users').select('id, display_name').in('id', creativeIds) : Promise.resolve({ data: [] }),
   ]);
 
   return (
@@ -50,7 +56,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
           {apps.map(a => {
             const cp = (profiles ?? []).find(p => p.user_id === a.creative_id) as
               { neighborhood: string | null; categories: CreativeCategory[]; avatar_url: string | null } | undefined;
-            const name = displayNameFor((a.users as { display_name: string | null } | null)?.display_name);
+            const name = displayNameFor((creativeUsers ?? []).find(u => u.id === a.creative_id)?.display_name);
             const rs = (reviews ?? []).filter(r => r.reviewee_id === a.creative_id);
             const rating = rs.length ? rs.reduce((s, r) => s + r.stars, 0) / rs.length : null;
             return (
