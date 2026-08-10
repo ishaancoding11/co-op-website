@@ -21,7 +21,7 @@ export function ReviewForm({ agreementId, revieweeId, revieweeName }: { agreemen
       </div>
       <textarea name="body" rows={3} className={inputCls} placeholder={`How was working with ${revieweeName}?`} />
       {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
-      <button disabled={pending} className="rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium hover:opacity-85 disabled:opacity-40">
+      <button disabled={pending} className="rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">
         {pending ? 'Submitting…' : 'Submit review'}
       </button>
     </form>

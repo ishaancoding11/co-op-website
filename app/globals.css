@@ -56,6 +56,19 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Barely-there paper grain over the whole page. Editorial warmth without
+   noise you'd consciously notice — it just makes flat fills feel like stock. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+body > * { position: relative; z-index: 1; }
+
 h1, h2, .font-display {
   font-family: var(--font-display), Georgia, serif;
   font-optical-sizing: auto;
@@ -73,6 +86,18 @@ h1, h2, .font-display {
 }
 
 ::selection { background: var(--accent-soft); color: var(--accent-deep); }
+
+/* Thin, warm scrollbar — tinted to the paper, never system-grey. The 3px
+   "border" is the page background, so the thumb reads as a slim pill. */
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 3px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-corner { background: transparent; }
 
 /* Utility: hairline top-rule used on editorial section headers. */
 .rule-accent::before {
@@ -109,7 +134,21 @@ h1, h2, .font-display {
 .stagger > *:nth-child(5) { animation-delay: 180ms; }
 .stagger > *:nth-child(6) { animation-delay: 225ms; }
 
+/* Popover / menu entrance — scales up from the trigger, never from nothing
+   (Emil: start at 0.96 + opacity, ease-out, <200ms). Pair with an
+   origin-* utility on the element so it grows from the right anchor. */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop { animation: pop-in 0.15s var(--ease-out); }
+
+/* Deliberately gentle loader — breathes with opacity instead of the harsh
+   grey flash of a default skeleton. Pairs with warm --line fills. */
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.animate-pulse-soft { animation: pulse-soft 1.4s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise, .stagger > * { animation: none; opacity: 1; }
+  .animate-rise, .stagger > *, .animate-pop, .animate-pulse-soft { animation: none; opacity: 1; }
   .press:active { transform: none; }
 }

@@ -16,7 +16,7 @@ export function SupportForm() {
       <input name="subject" className={inputCls} placeholder="Subject" aria-label="Subject" maxLength={200} required />
       <textarea name="body" rows={5} className={inputCls} placeholder="How can we help?" aria-label="Message" maxLength={4000} required />
       {state?.error && <p className="text-sm text-red-700">{state.error}</p>}
-      <button disabled={pending} className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85 disabled:opacity-40">
+      <button disabled={pending} className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">
         {pending ? 'Sending…' : 'Send message'}
       </button>
     </form>

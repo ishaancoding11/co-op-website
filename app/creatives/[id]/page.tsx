@@ -47,10 +47,10 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
               {business && !isOwner && (
                 <>
                   <form action={async () => { 'use server'; await businessAct(id, 'liked', 'direct'); }}>
-                    <button className="rounded-full bg-accent text-white px-5 py-2 text-sm font-medium hover:opacity-85">♥ Interested</button>
+                    <button className="press rounded-full bg-accent text-white px-5 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-accent-deep transition-colors">♥ Interested</button>
                   </form>
                   <form action={toggleFavorite.bind(null, 'creative', id, `/creatives/${id}`)}>
-                    <button className="rounded-full border border-line px-4 py-2 text-sm font-medium hover:bg-card">{fav ? '♥ Saved' : '♡ Save'}</button>
+                    <button className={`press rounded-full border px-4 py-2 text-sm font-medium transition-colors ${fav ? 'border-accent/50 bg-accent-soft text-accent' : 'border-line bg-card hover:border-line-strong'}`}>{fav ? '♥ Saved' : '♡ Save'}</button>
                   </form>
                 </>
               )}
@@ -109,10 +109,10 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
         {items.length ? (
           <div className="grid grid-cols-3 gap-1">
             {items.map(p => (
-              <div key={p.id} className="relative aspect-square bg-sea-soft overflow-hidden group">
+              <div key={p.id} className="relative aspect-square bg-gradient-to-br from-sea-soft to-accent-soft/50 overflow-hidden group">
                 {p.is_favorite && <span className="absolute top-1.5 right-1.5 z-10 text-gold drop-shadow" title="Highlighted" aria-label="Highlighted piece">★</span>}
                 {p.media_type === 'image' && p.media_url ? (
-                  <img src={p.media_url} alt={p.caption ?? `Work by ${name}`} className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform" />
+                  <img src={p.media_url} alt={p.caption ?? `Work by ${name}`} className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.04]" />
                 ) : (
                   <div className="h-full w-full flex flex-col items-center justify-center gap-1 px-2 text-center text-sea/70">
                     <LineIcon name={mediaIcon(p.media_type, p.source)} size={26} />
@@ -126,7 +126,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
             ))}
           </div>
         ) : (
-          <p className="text-center text-sm text-muted py-12">No pieces yet</p>
+          <p className="text-center text-sm text-muted py-12">{isOwner ? 'Your portfolio is empty — add your first piece to start attracting bookings.' : `${name} hasn’t added portfolio pieces yet.`}</p>
         )}
       </section>
 

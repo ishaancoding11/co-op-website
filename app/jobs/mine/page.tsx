@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, StatusBadge, EmptyState, LinkButton, Tag } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 import { categoryLabel, priceRange, type Job } from '@/lib/types';
 import { getLocale } from '@/lib/i18n-server';
 
@@ -24,7 +25,11 @@ export default async function MyJobs() {
         <LinkButton href="/jobs/new">+ Post a job</LinkButton>
       </div>
       {!jobs?.length ? (
-        <EmptyState title="No jobs yet" body="Post your first job and local creatives will start applying."
+        <EmptyState
+          tone="accent"
+          icon={<LineIcon name="clipboard" size={30} />}
+          title="Post your first job"
+          body="Tell local creatives exactly what you need — the more specific, the better the match. Most posts get their first application within a day."
           action={<LinkButton href="/jobs/new">Post a job</LinkButton>} />
       ) : (
         <div className="space-y-3 mt-6">
@@ -32,7 +37,7 @@ export default async function MyJobs() {
             const count = (apps ?? []).filter(a => a.job_id === j.id).length;
             return (
               <Link key={j.id} href={`/jobs/${j.id}/applicants`} className="block group">
-                <Card className="p-5 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
+                <Card className="p-5 flex items-center justify-between gap-3 hover:border-line-strong hover:shadow-[var(--shadow-md)] transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)]">
                   <div>
                     <h2 className="font-semibold group-hover:underline underline-offset-2">{j.title}</h2>
                     <p className="text-xs text-muted mt-0.5">{categoryLabel(j.category, locale)} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>

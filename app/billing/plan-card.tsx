@@ -29,7 +29,7 @@ export function PlanCard({ plan, label, blurb, features, monthly, annual, annual
   const showToggle = isKzt ? kztAnnualAvailable : annual != null;
 
   return (
-    <div className={`rounded-3xl border p-6 flex flex-col ${highlight ? 'border-accent shadow-[0_8px_30px_rgba(45,42,38,0.1)]' : 'border-line'} ${current ? 'bg-sea-soft/40' : 'bg-card'}`}>
+    <div className={`rounded-3xl border p-6 flex flex-col ${highlight ? 'border-accent shadow-[var(--shadow-md)]' : 'border-line'} ${current ? 'bg-sea-soft/40' : 'bg-card'}`}>
       {highlight && <span className="self-start rounded-full bg-accent text-white text-xs font-semibold px-2.5 py-0.5 mb-3">Most popular</span>}
       <h3 className="font-display text-2xl">{label}</h3>
       <p className="text-sm text-muted mt-1">{blurb}</p>
@@ -65,7 +65,7 @@ export function PlanCard({ plan, label, blurb, features, monthly, annual, annual
           <form action={manualAction} className="mt-5">
             <input type="hidden" name="plan" value={plan} />
             <input type="hidden" name="interval" value={effInterval} />
-            <button disabled={manualPending} className={`w-full rounded-full py-2.5 text-sm font-medium hover:opacity-85 disabled:opacity-40 ${highlight ? 'bg-accent text-white' : 'bg-foreground text-background'}`}>
+            <button disabled={manualPending} className={`w-full rounded-full py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40 ${highlight ? 'bg-accent text-white' : 'bg-foreground text-background'}`}>
               {manualPending ? labels.requesting : labels.requestPlan}
             </button>
             <p className="text-xs text-muted mt-2">{labels.kztNotice}</p>
@@ -76,7 +76,7 @@ export function PlanCard({ plan, label, blurb, features, monthly, annual, annual
         <form action={action} className="mt-5">
           <input type="hidden" name="plan" value={plan} />
           <input type="hidden" name="interval" value={effInterval} />
-          <button disabled={pending} className={`w-full rounded-full py-2.5 text-sm font-medium hover:opacity-85 disabled:opacity-40 ${highlight ? 'bg-accent text-white' : 'bg-foreground text-background'}`}>
+          <button disabled={pending} className={`w-full rounded-full py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40 ${highlight ? 'bg-accent text-white' : 'bg-foreground text-background'}`}>
             {pending ? labels.opening : `${labels.choose} ${label}`}
           </button>
           {state?.error && <p role="alert" className="text-xs text-red-700 mt-2 text-center">{state.error}</p>}

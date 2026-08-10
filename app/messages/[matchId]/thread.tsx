@@ -78,7 +78,7 @@ export function Thread({ matchId, userId, initial, otherName }: {
         <input value={draft} onChange={e => setDraft(e.target.value)} placeholder={`Message ${otherName}…`}
           aria-label={`Message ${otherName}`}
           className="flex-1 rounded-full border border-line bg-card px-4 py-2.5 text-sm focus:border-accent focus:outline-none" />
-        <button disabled={!draft.trim() || sending} className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium hover:opacity-85 disabled:opacity-40">Send</button>
+        <button disabled={!draft.trim() || sending} className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">Send</button>
       </form>
     </>
   );

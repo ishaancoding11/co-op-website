@@ -32,12 +32,16 @@ export default async function PortfolioManager() {
             <Field label={t('portfolio.year')}><input name="project_year" inputMode="numeric" maxLength={4} className={inputCls} placeholder="2025" /></Field>
             <Field label={t('portfolio.tags')}><input name="tags" className={inputCls} placeholder={t('portfolio.tagsPlaceholder')} /></Field>
           </div>
-          <button className="rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium hover:opacity-85">{t('portfolio.addButton')}</button>
+          <button className="rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">{t('portfolio.addButton')}</button>
         </form>
       </Card>
 
       {!(items as PortfolioItem[] | null)?.length ? (
-        <EmptyState title={t('portfolio.emptyTitle')} body={t('portfolio.emptyBody')} />
+        <EmptyState
+          tone="accent"
+          icon={<LineIcon name="star" size={30} />}
+          title={t('portfolio.emptyTitle')}
+          body={t('portfolio.emptyBody')} />
       ) : (
         <div className="grid sm:grid-cols-2 gap-3 mt-6">
           {(items as PortfolioItem[]).slice()

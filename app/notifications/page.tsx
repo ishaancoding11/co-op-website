@@ -29,12 +29,15 @@ export default async function Notifications() {
         )}
       </div>
       {!notifications?.length ? (
-        <EmptyState title="All quiet" body="Matches, messages, applications, and reviews will show up here (and in your email)." />
+        <EmptyState
+          icon={<LineIcon name="bell" size={30} />}
+          title="You&rsquo;re all caught up"
+          body="Matches, new messages, applications, and reviews land here as they happen. We&rsquo;ll also email the important ones." />
       ) : (
         <div className="space-y-2 mt-6">
           {(notifications as Notification[]).map(n => (
             <Link key={n.id} href={n.content.href ?? '#'} className="block">
-              <Card className={`p-4 flex items-start gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow ${!n.is_read ? 'border-accent' : ''}`}>
+              <Card className={`p-4 flex items-start gap-3 hover:border-line-strong hover:shadow-[var(--shadow-md)] transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] ${!n.is_read ? 'border-accent' : ''}`}>
                 <span className="grid place-items-center h-8 w-8 shrink-0 rounded-full bg-accent-soft text-accent" aria-hidden><LineIcon name={ICONS[n.type] ?? 'bell'} size={17} /></span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.content.title ?? n.type}</p>

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { Card, Tag, Avatar, EmptyState, IconPin, IconHeart, IconSearch } from '@/components/ui';
+import { Card, Tag, Avatar, EmptyState, IconPin, IconHeart, IconSearch, LinkButton } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 import { Dropdown, LocationSelect } from '@/components/dropdown';
-import { RangeSlider } from '@/components/range-slider';
+import { PriceFilter } from '@/components/price-filter';
 import { ALL_CATEGORIES, categoryLabel, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 import { getLocale } from '@/lib/i18n-server';
 
@@ -64,16 +65,14 @@ export default async function Browse({ searchParams }: {
             className="flex-1 bg-transparent text-sm placeholder:text-muted/70 focus:outline-none" />
           <button className="press rounded-full bg-foreground text-background px-5 py-2 text-sm font-medium">Search</button>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2 items-end">
+        <div className="mt-3 flex flex-wrap gap-2 items-center">
           <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
             leadingOptions={[{ value: '', label: 'All categories' }]}
             options={ALL_CATEGORIES.map(c => ({ value: c, label: categoryLabel(c, locale) }))} />
           <LocationSelect name="neighborhood" defaultValue={sp.neighborhood} allowAny className="w-44" ariaLabel="Location" />
-          <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
-            <RangeSlider nameMin="price_min" nameMax="price_max" label="price"
-              initialMin={sp.price_min ? Number(sp.price_min) : 0}
-              initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
-          </div>
+          <PriceFilter nameMin="price_min" nameMax="price_max" label="Price"
+            initialMin={sp.price_min ? Number(sp.price_min) : 0}
+            initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
           <Dropdown name="min_rating" defaultValue={sp.min_rating ?? ''} ariaLabel="Rating" className="w-36" options={[
             { value: '', label: 'Any rating' },
             { value: '4', label: '4★ & up' },
@@ -83,7 +82,11 @@ export default async function Browse({ searchParams }: {
       </form>
 
       {withRating.length === 0 ? (
-        <EmptyState title="No creatives match those filters" body="Try widening your budget or category." />
+        <EmptyState
+          icon={<LineIcon name="pin" size={30} />}
+          title="Nobody matches those filters — yet"
+          body="Try loosening the budget, dropping a category, or picking a nearby neighborhood. New creatives join every week."
+          action={<LinkButton href="/browse" variant="secondary">Clear filters</LinkButton>} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7 mt-7 stagger">
           {visible.map(c => {
@@ -92,10 +95,19 @@ export default async function Browse({ searchParams }: {
             return (
               <Link key={c.user_id} href={`/creatives/${c.user_id}`} className="group press block">
                 {/* Full-bleed listing image with floating price + rating, reference-style */}
-                <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-sea-soft shadow-[var(--shadow-sm)]">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-gradient-to-br from-sea-soft via-background to-accent-soft/60 shadow-[var(--shadow-sm)]">
                   {c.hero
                     ? <img src={c.hero} alt="" className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.04]" />
-                    : <div className="h-full flex items-center justify-center"><Avatar name={name} url={c.avatar_url} size={72} /></div>}
+                    : (
+                      <div className="h-full flex flex-col items-center justify-center gap-2.5">
+                        <span className="grid place-items-center rounded-full bg-card ring-1 ring-line shadow-[var(--shadow-md)] p-1 transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.04]">
+                          <Avatar name={name} url={c.avatar_url} size={64} />
+                        </span>
+                        {c.categories?.length ? (
+                          <span className="text-[11px] uppercase tracking-[0.16em] text-sea/80 font-medium">{categoryLabel((c.categories as CreativeCategory[])[0], locale)}</span>
+                        ) : null}
+                      </div>
+                    )}
                   {rate && (
                     <span className="absolute top-3 left-3 rounded-full bg-background/90 text-foreground text-xs font-semibold px-3 py-1.5 shadow-[var(--shadow-sm)] backdrop-blur">
                       {rate}
@@ -130,8 +142,8 @@ export default async function Browse({ searchParams }: {
           <h2 className="font-display text-xl">+{hiddenCount} more local creative{hiddenCount === 1 ? '' : 's'}</h2>
           <p className="text-sm text-muted mt-1">Join free to see everyone, match, and message directly.</p>
           <div className="mt-4 flex gap-2 justify-center flex-wrap">
-            <Link href="/login?role=business" className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium hover:opacity-85">Get started as a business</Link>
-            <Link href="/login?role=creative" className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Get started as a creative</Link>
+            <Link href="/login?role=business" className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Get started as a business</Link>
+            <Link href="/login?role=creative" className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Get started as a creative</Link>
           </div>
         </Card>
       )}

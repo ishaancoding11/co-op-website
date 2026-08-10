@@ -85,13 +85,35 @@ export function StatusBadge({ status }: { status: string }) {
   return <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${tones[status] ?? 'bg-line text-muted'}`}>{status.replace(/_/g, ' ')}</span>;
 }
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+/** Every empty state on the site funnels through this component. Formula:
+ *  contextual icon in a soft chip + a short human title + one sentence of body
+ *  that explains what belongs here + a single obvious next action. */
+export function EmptyState({
+  icon, title, body, action, tone = 'sea',
+}: {
+  icon?: ReactNode;
+  title: string;
+  body?: string;
+  action?: ReactNode;
+  /** Icon-chip color. Defaults to sea (calm neutral). Use `accent` when the
+   *  emptiness is itself the CTA moment ("nothing here yet — go add one"). */
+  tone?: 'sea' | 'accent' | 'gold';
+}) {
+  const chipTone =
+    tone === 'accent' ? 'bg-accent-soft text-accent'
+    : tone === 'gold' ? 'bg-gold-soft text-gold'
+    : 'bg-sea-soft text-sea';
   return (
-    <div className="text-center py-16 px-6">
-      <img src="/coop-logo.png" alt="" width={52} height={52} className="mx-auto mb-4" aria-hidden />
-
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}
+    <div className="text-center py-14 px-6">
+      {icon ? (
+        <span aria-hidden className={`mx-auto grid place-items-center h-16 w-16 rounded-2xl mb-4 ${chipTone}`}>
+          {icon}
+        </span>
+      ) : (
+        <img src="/coop-logo.png" alt="" width={52} height={52} className="mx-auto mb-4" aria-hidden />
+      )}
+      <h2 className="font-display text-xl">{title}</h2>
+      {body && <p className="text-muted text-sm mt-1.5 max-w-sm mx-auto leading-relaxed">{body}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

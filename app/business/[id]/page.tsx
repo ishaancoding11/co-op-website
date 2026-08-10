@@ -42,7 +42,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
             <div className="flex gap-2 justify-center sm:justify-start">
               {creative && !isOwner && (
                 <form action={creativeLikeBusiness.bind(null, id)}>
-                  <button className="rounded-full bg-accent text-white px-5 py-2 text-sm font-medium hover:opacity-85">♥ Interested</button>
+                  <button className="press rounded-full bg-accent text-white px-5 py-2 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-accent-deep transition-colors">♥ Interested</button>
                 </form>
               )}
               {isOwner && <LinkButton href="/onboarding/business" variant="ghost" size="sm">Edit profile</LinkButton>}
@@ -90,14 +90,16 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
         {openJobs.length ? (
           <div className="space-y-3 mt-3">
             {openJobs.map(j => (
-              <Link key={j.id} href={`/jobs/${j.id}`} className="block">
-                <Card className="p-4 flex items-center justify-between gap-3 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
-                  <div>
-                    <p className="font-semibold">{j.title}</p>
-                    <p className="text-xs text-muted">{categoryLabel(j.category, locale)} · {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
-                  </div>
-                  <StatusBadge status={j.status} />
-                </Card>
+              <Link key={j.id} href={`/jobs/${j.id}`}
+                className="group block rounded-3xl border border-line bg-card p-4 flex items-center justify-between gap-3
+                           transition-[border-color,box-shadow,transform] duration-200 ease-[var(--ease-out)]
+                           hover:border-line-strong hover:shadow-[var(--shadow-md)]
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.99]">
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{j.title}</p>
+                  <p className="text-xs text-muted mt-0.5">{categoryLabel(j.category, locale)} <span className="text-line-strong">·</span> {priceRange(j.budget_min, j.budget_max, j.currency) ?? 'Budget TBD'}</p>
+                </div>
+                <StatusBadge status={j.status} />
               </Link>
             ))}
           </div>

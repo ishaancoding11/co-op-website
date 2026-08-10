@@ -30,7 +30,7 @@ export function JobForm({ defaultLocation, categoryOptions }: {
         <Field label="Deadline"><input type="date" name="deadline" className={inputCls} /></Field>
       </div>
       {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
-      <button disabled={pending} className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
+      <button disabled={pending} className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">
         {pending ? 'Posting…' : 'Post job'}
       </button>
       <p className="text-xs text-muted text-center">Payments are handled directly between you and the creative — Co-op charges no fees.</p>

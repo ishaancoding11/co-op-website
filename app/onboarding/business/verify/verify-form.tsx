@@ -23,7 +23,7 @@ export function VerifyForm() {
         <input required type="email" name="email" className={inputCls} placeholder="you@yourbusiness.com" />
       </label>
       {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
-      <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
+      <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">
         {pending ? 'Sending…' : 'Send verification link'}
       </button>
     </form>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { Card, Avatar, EmptyState, LinkButton, Tag, VerifiedBadge } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 import { displayNameFor } from '@/lib/types';
 
 export default async function Matches() {
@@ -21,12 +22,18 @@ export default async function Matches() {
 
   return (
     <div className="py-8 max-w-2xl mx-auto">
-      <h1 className="font-display text-3xl">Matches</h1>
-      <p className="text-muted text-sm mt-1">Mutual interest — DMs are open. Agree on scope, then track it in Bookings.</p>
+      <h1 className="font-display text-3xl">Messages</h1>
+      <p className="text-muted text-sm mt-1">Every conversation you&rsquo;ve opened with someone local. Agree on scope, then track it in Bookings.</p>
       {!matches?.length ? (
-        <EmptyState title="No matches yet"
-          body={activeRole === 'business' ? 'Swipe through nearby creatives — when interest is mutual, you land here.' : 'Apply to jobs or get discovered — when a business accepts, you land here.'}
-          action={<LinkButton href={activeRole === 'business' ? '/discover' : '/jobs'}>{activeRole === 'business' ? 'Discover creatives' : 'Browse jobs'}</LinkButton>} />
+        <EmptyState
+          icon={<LineIcon name="sparkle" size={30} />}
+          title={activeRole === 'business' ? 'Nobody to chat with yet' : 'No conversations yet'}
+          body={activeRole === 'business'
+            ? 'Swipe through nearby creatives or browse the directory — when someone likes you back, your DM lands right here.'
+            : 'Apply to a job you like or let a business find you — once they accept, your thread opens right here.'}
+          action={<LinkButton href={activeRole === 'business' ? '/discover' : '/jobs'}>
+            {activeRole === 'business' ? 'Meet local creatives' : 'Browse open jobs'}
+          </LinkButton>} />
       ) : (
         <div className="space-y-3 mt-6">
           {matches.map(m => {
@@ -39,7 +46,7 @@ export default async function Matches() {
             const unread = (lastMsgs ?? []).some(x => x.match_id === m.id && x.sender_id !== userId && !x.read_at);
             return (
               <Link key={m.id} href={`/messages/${m.id}`} className="block">
-                <Card className={`p-4 flex items-center gap-4 hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow ${unread ? 'border-accent' : ''}`}>
+                <Card className={`p-4 flex items-center gap-4 hover:border-line-strong hover:shadow-[var(--shadow-md)] transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] ${unread ? 'border-accent' : ''}`}>
                   <Avatar name={otherName} size={48} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold flex items-center gap-1.5">{otherName} {verified && <VerifiedBadge small />}</p>

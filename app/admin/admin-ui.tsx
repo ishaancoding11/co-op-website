@@ -19,7 +19,7 @@ export function SearchBar({ action, value, placeholder = 'Search…', hidden }: 
     <form action={action} className="flex gap-2">
       {hidden && Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
       <input className={inputCls} type="search" name="q" defaultValue={value ?? ''} placeholder={placeholder} maxLength={100} />
-      <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85 shrink-0">Search</button>
+      <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] shrink-0">Search</button>
     </form>
   );
 }

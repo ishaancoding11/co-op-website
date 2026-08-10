@@ -25,7 +25,11 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
       const supabase = createClient();
 
       if (mode === 'signup') {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        // Send the confirmation email back to whichever origin the user signed
+        // up from — otherwise Supabase falls back to Site URL (prod) and the
+        // link bounces localhost sessions onto joinco-op.com.
+        const emailRedirectTo = `${window.location.origin}/auth/callback${role ? `?role=${role}` : ''}`;
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo } });
         if (signUpError) { setError(signUpError.message); return; }
         if (!data.session) {
           // Email confirmation is required by this project's Auth settings.
@@ -74,7 +78,7 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
           value={password} onChange={e => setPassword(e.target.value)} className={inputCls} />
       </label>
       {error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{error}</p>}
-      <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
+      <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] disabled:opacity-40">
         {pending ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Log in'}
       </button>
       <button type="button" onClick={() => { setMode(m => m === 'login' ? 'signup' : 'login'); setError(null); }}

@@ -95,7 +95,7 @@ export function Dropdown({
 
       {open && (
         <div role="listbox" aria-label={ariaLabel}
-          className="absolute z-50 mt-1.5 w-full min-w-max max-h-72 overflow-y-auto rounded-2xl border border-line bg-card shadow-[0_8px_30px_rgba(45,42,38,0.15)] py-1.5">
+          className="animate-pop origin-top absolute z-50 mt-1.5 w-full min-w-max max-h-72 overflow-y-auto rounded-2xl border border-line bg-card shadow-[var(--shadow-lg)] py-1.5">
           {leadingOptions?.map(o => {
             flatIndex++;
             return <Option key={o.value} option={o} selected={o.value === internal} highlighted={flatIndex === highlight} onSelect={select} />;

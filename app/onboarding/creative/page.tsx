@@ -56,7 +56,7 @@ export default async function CreativeOnboarding() {
             </div>
           </details>
 
-          <button className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85">Save profile</button>
+          <button className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Save profile</button>
           <p className="text-xs text-muted text-center">Next: add portfolio pieces from your Portfolio tab.</p>
         </form>
       </Card>

@@ -27,7 +27,7 @@ export default async function AdminSupport({ searchParams }: { searchParams: Pro
           { value: 'resolved', label: 'Resolved' },
           { value: 'dismissed', label: 'Dismissed' },
         ]} />
-        <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
+        <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Filter</button>
       </form>
 
       {error ? <p className="text-sm text-red-700 mt-4">Could not load support tickets.</p> : null}

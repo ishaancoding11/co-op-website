@@ -3,15 +3,47 @@ import { redirect } from 'next/navigation';
 import { chooseRole } from '@/lib/actions';
 import { getViewer, getStaffRole } from '@/lib/auth';
 import { Card } from '@/components/ui';
+import { TodayFeed } from '@/components/today-feed';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { ALL_CATEGORIES, categoryLabel } from '@/lib/types';
 import { getLocale } from '@/lib/i18n-server';
 import { CategoryIcon } from '@/components/category-icon';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
 export default async function Landing() {
-  // Signed-in users land on their discovery surface, not the marketing page.
+  // Signed-in users land on their Today feed — the summary of what's new
+  // in messages, matches, jobs, and nearby creatives.
   const { userId, creative, business, activeRole } = await getViewer();
-  if (userId && (creative || business)) {
-    redirect(activeRole === 'business' ? '/browse' : '/jobs');
+  if (userId && activeRole && (creative || business)) {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { data: u } = await supabase.from('users').select('display_name').eq('id', userId).maybeSingle();
+    const displayName =
+      (activeRole === 'business' ? business?.business_name : u?.display_name) ?? u?.display_name ?? 'friend';
+    const profileHref = activeRole === 'business'
+      ? (business ? `/business/${userId}` : '/onboarding/business')
+      : (creative ? `/creatives/${userId}` : '/onboarding/creative');
+    return (
+      <div className="py-2 space-y-6">
+        <div className="pt-6">
+          <OnboardingChecklist
+            userId={userId}
+            creative={creative}
+            business={business}
+            activeRole={activeRole}
+          />
+        </div>
+        <TodayFeed
+          userId={userId}
+          activeRole={activeRole}
+          displayName={displayName}
+          profileHref={profileHref}
+          creativeCategories={creative?.categories ?? []}
+          businessNeighborhood={business?.neighborhood ?? null}
+        />
+      </div>
+    );
   }
   // A staff account with no creative/business profile skips onboarding
   // entirely and goes straight to the admin panel. Only reachable if
@@ -47,8 +79,8 @@ export default async function Landing() {
 
       {/* ===== Role choice — two clean, restrained panels ===== */}
       <div className="animate-rise grid md:grid-cols-2 gap-4 mt-14" style={{ animationDelay: '220ms' }}>
-        <Card className="group p-7 flex flex-col items-start gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
-          <span className="grid place-items-center h-11 w-11 rounded-2xl bg-accent-soft text-accent" aria-hidden>
+        <Card className="group p-7 flex flex-col items-start gap-4 transition-[transform,box-shadow,border-color] duration-300 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-md)]">
+          <span className="grid place-items-center h-11 w-11 rounded-2xl bg-accent-soft text-accent transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-105" aria-hidden>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3c.6 4 1.8 5.2 5.8 5.8-4 .6-5.2 1.8-5.8 5.8-.6-4-1.8-5.2-5.8-5.8 4-.6 5.2-1.8 5.8-5.8Z"/><path d="M18 15.5c.3 1.8.9 2.4 2.7 2.7-1.8.3-2.4.9-2.7 2.7-.3-1.8-.9-2.4-2.7-2.7 1.8-.3 2.4-.9 2.7-2.7Z"/></svg>
           </span>
           <div>
@@ -56,11 +88,11 @@ export default async function Landing() {
             <p className="text-sm text-muted mt-1.5">Get discovered by local businesses, show your portfolio, and land paid gigs in your own community.</p>
           </div>
           <form action={chooseRole.bind(null, 'creative')} className="mt-1">
-            <button className="rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">Join as a creative</button>
+            <button className="press rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium shadow-[var(--shadow-sm)] transition-[transform,box-shadow] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">Join as a creative</button>
           </form>
         </Card>
-        <Card className="group p-7 flex flex-col items-start gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
-          <span className="grid place-items-center h-11 w-11 rounded-2xl bg-sea-soft text-sea" aria-hidden>
+        <Card className="group p-7 flex flex-col items-start gap-4 transition-[transform,box-shadow,border-color] duration-300 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-md)]">
+          <span className="grid place-items-center h-11 w-11 rounded-2xl bg-sea-soft text-sea transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-105" aria-hidden>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.2 5.3A1.5 1.5 0 0 1 6.6 4.2h10.8a1.5 1.5 0 0 1 1.4 1.1L20 9.5"/><path d="M4 9.5h16v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5Z"/><path d="M4 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M9.5 20v-4.5h5V20"/></svg>
           </span>
           <div>
@@ -68,7 +100,7 @@ export default async function Landing() {
             <p className="text-sm text-muted mt-1.5">Find a trusted nearby photographer, designer, or performer fast — swipe, match, and book directly.</p>
           </div>
           <form action={chooseRole.bind(null, 'business')} className="mt-1">
-            <button className="rounded-full bg-accent text-white px-6 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] hover:bg-accent-deep">Join as a business</button>
+            <button className="press rounded-full bg-accent text-white px-6 py-2.5 text-sm font-medium shadow-[var(--shadow-sm)] transition-[transform,box-shadow,background-color] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] hover:bg-accent-deep">Join as a business</button>
           </form>
         </Card>
       </div>
@@ -91,11 +123,11 @@ export default async function Landing() {
         <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {ALL_CATEGORIES.map(c => (
             <Link key={c} href={`/browse?category=${c}`}
-              className="group flex items-center gap-3 rounded-2xl bg-card border border-line px-4 py-3.5 hover:border-accent/60 hover:shadow-[var(--shadow-md)] transition-all">
-              <span className="grid place-items-center h-10 w-10 shrink-0 rounded-xl bg-surface-2 text-muted group-hover:bg-accent-soft group-hover:text-accent transition-colors">
+              className="press group flex items-center gap-3 rounded-2xl bg-card border border-line px-4 py-3.5 transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-accent/60 hover:shadow-[var(--shadow-md)]">
+              <span className="grid place-items-center h-10 w-10 shrink-0 rounded-xl bg-surface-2 text-muted transition-colors group-hover:bg-accent-soft group-hover:text-accent">
                 <CategoryIcon category={c} size={20} />
               </span>
-              <span className="text-sm font-semibold leading-tight">{categoryLabel(c, locale)}</span>
+              <span className="text-sm font-semibold leading-tight group-hover:text-accent transition-colors">{categoryLabel(c, locale)}</span>
             </Link>
           ))}
         </div>

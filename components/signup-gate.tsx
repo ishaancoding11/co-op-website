@@ -60,11 +60,11 @@ export function SignupGate() {
         </p>
         <div className="mt-6 space-y-2.5">
           <button onClick={() => go('business')}
-            className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium hover:opacity-85">
+            className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">
             Get started as a business
           </button>
           <button onClick={() => go('creative')}
-            className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85">
+            className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">
             Get started as a creative
           </button>
         </div>

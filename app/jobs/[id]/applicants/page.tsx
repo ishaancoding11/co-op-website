@@ -35,8 +35,11 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
       <p className="text-muted text-sm mt-1">Compare, shortlist, and accept. Accepting opens a DM thread.</p>
 
       {!apps?.length ? (
-        <EmptyState title="No applications yet" body="Creatives see your job in their feed. You can also go find them yourself."
-          action={<LinkButton href="/discover" variant="ghost">Discover creatives</LinkButton>} />
+        <EmptyState
+          icon={<LineIcon name="inbox" size={30} />}
+          title="No applications yet"
+          body="Your post is already in the local feed. Give it a day or two — or go pick creatives yourself while you wait."
+          action={<LinkButton href="/discover">Find creatives yourself</LinkButton>} />
       ) : (
         <div className="space-y-3 mt-6">
           {apps.map(a => {
@@ -73,7 +76,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
                     {a.application_status !== 'accepted' && a.application_status !== 'declined' && (
                       <div className="flex gap-2 mt-3 flex-wrap">
                         <form action={setApplicationStatus.bind(null, a.id, 'accepted')}>
-                          <button className="rounded-full bg-accent text-white px-4 py-1.5 text-sm font-medium hover:opacity-85">Accept & message</button>
+                          <button className="rounded-full bg-accent text-white px-4 py-1.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Accept & message</button>
                         </form>
                         {a.application_status !== 'shortlisted' && (
                           <form action={setApplicationStatus.bind(null, a.id, 'shortlisted')}>

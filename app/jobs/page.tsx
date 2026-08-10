@@ -3,10 +3,11 @@ import { getViewer } from '@/lib/auth';
 import { Card, Tag, StatusBadge, VerifiedBadge, EmptyState, LinkButton } from '@/components/ui';
 import { Dropdown, LocationSelect } from '@/components/dropdown';
 import { SaveJobButton } from '@/components/save-job-button';
-import { RangeSlider } from '@/components/range-slider';
+import { PriceFilter } from '@/components/price-filter';
 import { ALL_CATEGORIES, categoryLabel, priceRange, type Job } from '@/lib/types';
 import { getT } from '@/lib/i18n-server';
 import { CategoryIcon } from '@/components/category-icon';
+import { LineIcon } from '@/components/line-icons';
 
 function daysRemaining(deadline: string | null): string | null {
   if (!deadline) return null;
@@ -94,16 +95,14 @@ export default async function JobFeed({ searchParams }: {
         {activeRole === 'business' && <LinkButton href="/jobs/new">+ Post a job</LinkButton>}
       </div>
 
-      <form className="mt-4 flex flex-wrap gap-2" role="search" aria-label="Filter jobs">
+      <form className="mt-4 flex flex-wrap gap-2 items-center" role="search" aria-label="Filter jobs">
         <Dropdown name="category" defaultValue={sp.category ?? ''} ariaLabel="Category" className="w-44"
           leadingOptions={[{ value: '', label: 'All categories' }]}
           options={ALL_CATEGORIES.map(c => ({ value: c, label: categoryLabel(c, locale) }))} />
         <LocationSelect name="location" defaultValue={sp.location} allowAny className="w-44" ariaLabel="Location" />
-        <div className="w-56 rounded-xl border border-line bg-card px-4 pt-2 pb-1">
-          <RangeSlider nameMin="price_min" nameMax="price_max" label="budget"
-            initialMin={sp.price_min ? Number(sp.price_min) : 0}
-            initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
-        </div>
+        <PriceFilter nameMin="price_min" nameMax="price_max" label="Budget"
+          initialMin={sp.price_min ? Number(sp.price_min) : 0}
+          initialMax={sp.price_max ? Number(sp.price_max) : 3000} />
         {activeRole === 'creative' && (
           <Dropdown name="sort" defaultValue={sort} ariaLabel="Sort jobs" className="w-52" options={[
             { value: 'featured', label: 'Featured — best fit for you' },
@@ -112,11 +111,19 @@ export default async function JobFeed({ searchParams }: {
             { value: 'newest', label: 'Newest' },
           ]} />
         )}
-        <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Filter</button>
+        <button className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Filter</button>
       </form>
 
       {!jobs?.length ? (
-        <EmptyState title={t('jobs.empty')} body="Check back soon — or make yourself discoverable so businesses find you first." />
+        <EmptyState
+          icon={<LineIcon name="clipboard" size={30} />}
+          title="No jobs match your filters"
+          body={activeRole === 'creative'
+            ? 'Loosen a filter or make sure your profile is public — businesses often reach out directly when they spot a good fit.'
+            : 'Try widening the budget or dropping a category. New jobs get posted throughout the week.'}
+          action={activeRole === 'creative'
+            ? <LinkButton href="/portfolio" variant="secondary">Polish my profile</LinkButton>
+            : <LinkButton href="/jobs" variant="secondary">Clear filters</LinkButton>} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 stagger">
           {(jobs as (Job & { business_profiles: { business_name: string; neighborhood: string | null; is_verified: boolean } | null })[]).map(j => {
@@ -131,8 +138,10 @@ export default async function JobFeed({ searchParams }: {
                 )}
                 <Link href={`/jobs/${j.id}`} className="block h-full">
                   <Card className="overflow-hidden h-full flex flex-col shadow-[var(--shadow-sm)] transition-shadow duration-200 ease-[var(--ease-out)] group-hover:shadow-[var(--shadow-md)]">
-                    <div className="h-40 bg-sea-soft flex items-center justify-center relative text-sea/70">
-                      <CategoryIcon category={j.category} size={44} />
+                    <div className="h-40 bg-gradient-to-br from-sea-soft via-background to-accent-soft/60 flex items-center justify-center relative text-sea">
+                      <span className="grid place-items-center h-16 w-16 rounded-2xl bg-card ring-1 ring-line shadow-[var(--shadow-md)] transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.05]">
+                        <CategoryIcon category={j.category} size={30} />
+                      </span>
                       {priceRange(j.budget_min, j.budget_max, j.currency) && (
                         <span className="absolute bottom-3 left-3 rounded-lg bg-foreground/85 text-background px-2.5 py-1 text-xs font-semibold backdrop-blur">
                           {priceRange(j.budget_min, j.budget_max, j.currency)}
@@ -171,8 +180,8 @@ export default async function JobFeed({ searchParams }: {
           <h2 className="font-display text-xl">+{hiddenJobs} more open job{hiddenJobs === 1 ? '' : 's'}</h2>
           <p className="text-sm text-muted mt-1">Join free to see every listing, who&rsquo;s hiring, and apply with your portfolio.</p>
           <div className="mt-4 flex gap-2 justify-center flex-wrap">
-            <Link href="/login?role=creative" className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium hover:opacity-85">Get started as a creative</Link>
-            <Link href="/login?role=business" className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium hover:opacity-85">Get started as a business</Link>
+            <Link href="/login?role=creative" className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Get started as a creative</Link>
+            <Link href="/login?role=business" className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Get started as a business</Link>
           </div>
         </Card>
       )}

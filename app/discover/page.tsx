@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/auth';
 import { EmptyState, LinkButton } from '@/components/ui';
+import { LineIcon } from '@/components/line-icons';
 import { SwipeDeck, type DeckCard } from './swipe-deck';
 import { categoryLabel, displayNameFor, priceRange, type CreativeCategory } from '@/lib/types';
 import { getLocale } from '@/lib/i18n-server';
@@ -50,9 +51,12 @@ export default async function Discover() {
         <p className="text-muted text-sm mt-1">Swipe right to say you&rsquo;re interested · left to pass · tap the card for the full profile</p>
       </div>
       {cards.length === 0 ? (
-        <EmptyState title="You’ve seen everyone nearby (for now)"
-          body="New creatives join all the time. Meanwhile, try browsing with filters or post a job so creatives come to you."
-          action={<div className="flex gap-3 justify-center"><LinkButton href="/browse" variant="ghost">Browse all</LinkButton><LinkButton href="/jobs/new">Post a job</LinkButton></div>} />
+        <EmptyState
+          tone="gold"
+          icon={<LineIcon name="sparkle" size={30} />}
+          title="You’ve seen everyone nearby (for now)"
+          body="New creatives join Co-op every week. In the meantime, browse the full directory with filters — or post a job so the right people find you."
+          action={<div className="flex gap-3 justify-center flex-wrap"><LinkButton href="/browse" variant="secondary">Browse everyone</LinkButton><LinkButton href="/jobs/new">Post a job</LinkButton></div>} />
       ) : (
         <SwipeDeck cards={cards} />
       )}

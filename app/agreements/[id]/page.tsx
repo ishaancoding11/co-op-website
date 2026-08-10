@@ -47,7 +47,7 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
           <p className="text-sm text-muted">Waiting on acceptance to kick things off.</p>
           <div className="flex gap-2">
             <form action={updateAgreementStatus.bind(null, id, 'accepted')}>
-              <button className="rounded-full bg-accent text-white px-5 py-2 text-sm font-medium hover:opacity-85">Accept</button>
+              <button className="rounded-full bg-accent text-white px-5 py-2 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Accept</button>
             </form>
             <form action={updateAgreementStatus.bind(null, id, 'cancelled')}>
               <button className="rounded-full border border-line px-5 py-2 text-sm text-muted font-medium hover:bg-background">Cancel</button>
@@ -66,7 +66,7 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
           </div>
           {!iCompleted && (
             <form action={markComplete.bind(null, id)} className="mt-4">
-              <button className="w-full rounded-full bg-foreground text-background py-2.5 text-sm font-medium hover:opacity-85">Mark complete</button>
+              <button className="w-full rounded-full bg-foreground text-background py-2.5 text-sm font-medium active:scale-[0.97] hover:opacity-90 transition-[transform,opacity] duration-200 ease-[var(--ease-out)]">Mark complete</button>
             </form>
           )}
         </Card>

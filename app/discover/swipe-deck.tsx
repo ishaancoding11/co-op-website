@@ -47,9 +47,9 @@ export function SwipeDeck({ cards }: { cards: DeckCard[] }) {
       {current && (
         <div className="absolute -bottom-20 inset-x-0 flex items-center justify-center gap-6">
           <button aria-label={`Pass on ${current.name}`} onClick={() => act(current, 'passed')}
-            className="h-14 w-14 rounded-full bg-card border border-line shadow-md text-2xl hover:scale-105 transition-transform">✕</button>
+            className="h-14 w-14 rounded-full bg-card border border-line text-muted shadow-[var(--shadow-md)] text-2xl transition-[transform,color,border-color] duration-200 ease-[var(--ease-out)] hover:scale-105 hover:text-foreground hover:border-line-strong active:scale-95">✕</button>
           <button aria-label={`Interested in ${current.name}`} onClick={() => act(current, 'liked')}
-            className="h-16 w-16 rounded-full bg-accent text-white shadow-lg text-2xl hover:scale-105 transition-transform">♥</button>
+            className="h-16 w-16 rounded-full bg-accent text-white shadow-[var(--shadow-lg)] text-2xl transition-[transform,background-color] duration-200 ease-[var(--ease-out)] hover:scale-105 hover:bg-accent-deep active:scale-95">♥</button>
         </div>
       )}
 
@@ -63,10 +63,10 @@ export function SwipeDeck({ cards }: { cards: DeckCard[] }) {
 function CardBody({ card }: { card: DeckCard }) {
   return (
     <>
-      <div className="h-[58%] bg-sea-soft relative">
+      <div className="h-[58%] bg-gradient-to-br from-sea-soft via-background to-accent-soft/60 relative">
         {card.heroUrl
           ? <img src={card.heroUrl} alt={`Portfolio work by ${card.name}`} className="h-full w-full object-cover" />
-          : <div className="h-full w-full flex items-center justify-center"><Avatar name={card.name} url={card.avatarUrl} size={96} /></div>}
+          : <div className="h-full w-full flex items-center justify-center"><span className="rounded-full bg-card ring-1 ring-line shadow-[var(--shadow-md)] p-1.5"><Avatar name={card.name} url={card.avatarUrl} size={92} /></span></div>}
         {card.price && <span className="absolute bottom-3 left-3 rounded-lg bg-foreground/85 text-background px-2.5 py-1 text-xs font-semibold backdrop-blur">from {card.price.split('–')[0]}</span>}
       </div>
       <div className="p-5">
@@ -132,8 +132,8 @@ function MatchOverlay({ card, onClose }: { card: DeckCard; onClose: () => void }
         <h2 className="font-display text-3xl mt-3 text-accent">It&rsquo;s a match!</h2>
         <p className="text-sm text-muted mt-2">{card.name} liked you too. Your DM thread is now open.</p>
         <div className="mt-6 flex flex-col gap-2">
-          <button onClick={() => router.push('/matches')} className="rounded-full bg-accent text-white py-2.5 text-sm font-medium hover:opacity-85">Send a message</button>
-          <button onClick={onClose} className="rounded-full border border-line py-2.5 text-sm font-medium hover:bg-background">Keep swiping</button>
+          <button onClick={() => router.push('/matches')} className="press rounded-full bg-accent text-white py-2.5 text-sm font-medium hover:bg-accent-deep transition-colors">Send a message</button>
+          <button onClick={onClose} className="press rounded-full border border-line py-2.5 text-sm font-medium hover:border-line-strong hover:bg-background transition-colors">Keep swiping</button>
         </div>
       </motion.div>
     </motion.div>

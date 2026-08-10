@@ -14,7 +14,20 @@
     "getStarted": "Начать",
     "searchJobs": "Поиск заказов…",
     "all": "Все",
-    "language": "Язык"
+    "language": "Язык",
+    "home": "Главная",
+    "browse": "Каталог",
+    "browseHint": "Найти работу",
+    "browseHintBiz": "Найти креативщиков",
+    "messages": "Сообщения",
+    "you": "Вы",
+    "notifications": "Уведомления",
+    "viewMyProfile": "Мой профиль",
+    "myJobsShort": "Мои заказы",
+    "saved": "Сохранённое",
+    "settings": "Настройки",
+    "signOut": "Выйти",
+    "post": "Разместить"
   },
   "jobs": {
     "title": "Заказы рядом",
