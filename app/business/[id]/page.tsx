@@ -26,7 +26,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
     <div className="py-8 max-w-3xl mx-auto">
       {/* ===== Header — same structure as the creative profile ===== */}
       <header className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10">
-        <div className="rounded-full p-1 bg-gradient-to-tr from-accent via-gold to-sea shrink-0">
+        <div className="rounded-full p-1 bg-gradient-to-tr from-accent to-gold shrink-0">
           <div className="rounded-full p-1 bg-background">
             <Avatar name={b.business_name} url={b.logo_url} size={128} />
           </div>

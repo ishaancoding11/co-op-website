@@ -40,12 +40,12 @@ export default async function PortfolioManager() {
                 {p.is_favorite && <span className="absolute top-2 right-2 z-10 rounded-full bg-gold text-white text-xs px-1.5 py-0.5 shadow">★ highlighted</span>}
                 {p.media_type === 'image' && p.media_url
                   ? <img src={p.media_url} alt={p.caption ?? 'Portfolio piece'} className="h-36 w-full object-cover" />
-                  : <div className="h-36 flex items-center justify-center text-3xl bg-sea-soft" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : p.source === 'completed_job' ? '✅' : '🔗'}</div>}
+                  : <div className="h-36 flex items-center justify-center text-3xl bg-line" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : p.source === 'completed_job' ? '✅' : '🔗'}</div>}
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium truncate">{p.caption ?? 'Untitled'}</p>
-                  {p.source === 'completed_job' && <Tag tone="sea">via Co-op</Tag>}
+                  {p.source === 'completed_job' && <Tag tone="neutral">via Co-op</Tag>}
                   {p.is_hidden && <Tag>hidden</Tag>}
                 </div>
                 <div className="flex gap-3 mt-2 text-xs flex-wrap">

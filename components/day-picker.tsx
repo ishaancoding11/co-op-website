@@ -10,7 +10,7 @@ export function DayPicker({ initial = [], name = 'available_days' }: { initial?:
     <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Days of the week you're available">
       {WEEKDAYS.map(d => (
         <button type="button" key={d.key} onClick={() => toggle(d.key)} aria-pressed={picked.includes(d.key)}
-          className={`w-12 rounded-xl border py-2 text-xs font-semibold transition-colors ${picked.includes(d.key) ? 'bg-sea text-white border-sea' : 'bg-card border-line text-muted hover:border-sea/50'}`}>
+          className={`w-12 rounded-xl border py-2 text-xs font-semibold transition-colors ${picked.includes(d.key) ? 'bg-accent text-white border-accent' : 'bg-card border-line text-muted hover:border-accent/50'}`}>
           {d.label}
         </button>
       ))}

@@ -32,7 +32,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
     <div className="py-8 max-w-3xl mx-auto">
       {/* ===== IG-style header ===== */}
       <header className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10">
-        <div className="rounded-full p-1 bg-gradient-to-tr from-accent via-gold to-sea shrink-0">
+        <div className="rounded-full p-1 bg-gradient-to-tr from-accent to-gold shrink-0">
           <div className="rounded-full p-1 bg-background">
             <Avatar name={name} url={c.avatar_url} size={128} />
           </div>
@@ -105,7 +105,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
         {items.length ? (
           <div className="grid grid-cols-3 gap-1">
             {items.map(p => (
-              <div key={p.id} className="relative aspect-square bg-sea-soft overflow-hidden group">
+              <div key={p.id} className="relative aspect-square bg-line overflow-hidden group">
                 {p.is_favorite && <span className="absolute top-1.5 right-1.5 z-10 text-gold drop-shadow" title="Highlighted" aria-label="Highlighted piece">★</span>}
                 {p.media_type === 'image' && p.media_url ? (
                   <img src={p.media_url} alt={p.caption ?? `Work by ${name}`} className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform" />
@@ -136,7 +136,7 @@ export default async function CreativeProfile({ params }: { params: Promise<{ id
             </ul>
             {(musician as MusicianDetails).audio_links.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {(musician as MusicianDetails).audio_links.map(l => <a key={l} href={l} target="_blank" rel="noopener noreferrer" className="text-sm text-sea underline underline-offset-2">Listen ↗</a>)}
+                {(musician as MusicianDetails).audio_links.map(l => <a key={l} href={l} target="_blank" rel="noopener noreferrer" className="text-sm text-accent underline underline-offset-2">Listen ↗</a>)}
               </div>
             )}
             {((musician as MusicianDetails).rate_per_set_min || (musician as MusicianDetails).rate_per_set_max) && (

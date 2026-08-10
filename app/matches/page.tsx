@@ -75,7 +75,7 @@ export default async function Matches() {
                     </p>
                   </div>
                   {unread && <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-label="Unread messages" />}
-                  {jobTitle && <Tag tone="sea">job</Tag>}
+                  {jobTitle && <Tag tone="neutral">job</Tag>}
                 </Card>
               </Link>
             );

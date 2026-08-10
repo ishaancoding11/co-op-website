@@ -79,7 +79,7 @@ export default async function Browse({ searchParams }: {
             return (
               <Link key={c.user_id} href={`/creatives/${c.user_id}`} className="group">
                 <Card className="overflow-hidden hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
-                  <div className="h-40 bg-sea-soft">
+                  <div className="h-40 bg-line">
                     {c.hero
                       ? <img src={c.hero} alt="" className="h-full w-full object-cover group-hover:scale-[1.02] transition-transform" />
                       : <div className="h-full flex items-center justify-center"><Avatar name={name} url={c.avatar_url} size={64} /></div>}

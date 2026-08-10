@@ -62,7 +62,7 @@ export function SwipeDeck({ cards }: { cards: DeckCard[] }) {
 function CardBody({ card }: { card: DeckCard }) {
   return (
     <>
-      <div className="h-[58%] bg-sea-soft relative">
+      <div className="h-[58%] bg-line relative">
         {card.heroUrl
           ? <img src={card.heroUrl} alt={`Portfolio work by ${card.name}`} className="h-full w-full object-cover" />
           : <div className="h-full w-full flex items-center justify-center"><Avatar name={card.name} url={card.avatarUrl} size={96} /></div>}
@@ -112,7 +112,7 @@ function DraggableCard({ card, onSwipe, onOpen }: { card: DeckCard; onSwipe: (a:
       role="button" tabIndex={0} aria-label={`${card.name} — open profile. Use the buttons below to pass or like.`}
       onKeyDown={e => { if (e.key === 'Enter') onOpen(); if (e.key === 'ArrowRight') onSwipe('liked'); if (e.key === 'ArrowLeft') onSwipe('passed'); }}
     >
-      <motion.div style={{ opacity: likeOpacity }} className="absolute top-6 left-6 z-10 rotate-[-12deg] rounded-xl border-4 border-sea text-sea px-3 py-1 font-display text-2xl">INTERESTED</motion.div>
+      <motion.div style={{ opacity: likeOpacity }} className="absolute top-6 left-6 z-10 rotate-[-12deg] rounded-xl border-4 border-accent text-accent px-3 py-1 font-display text-2xl">INTERESTED</motion.div>
       <motion.div style={{ opacity: passOpacity }} className="absolute top-6 right-6 z-10 rotate-[12deg] rounded-xl border-4 border-muted text-muted px-3 py-1 font-display text-2xl">PASS</motion.div>
       <CardBody card={card} />
     </motion.div>

@@ -79,7 +79,7 @@ export default async function Applicants({ params }: { params: Promise<{ id: str
                           <figure key={item.id} className="shrink-0 w-24">
                             {item.media_type === 'image' && item.media_url
                               ? <img src={item.media_url} alt={item.caption ?? 'Shared portfolio piece'} className="h-16 w-24 object-cover rounded-lg border border-line" />
-                              : <div className="h-16 w-24 rounded-lg border border-line bg-sea-soft flex items-center justify-center" aria-hidden>{item.media_type === 'video' ? '🎬' : item.media_type === 'audio' ? '🎵' : '🔗'}</div>}
+                              : <div className="h-16 w-24 rounded-lg border border-line bg-line flex items-center justify-center" aria-hidden>{item.media_type === 'video' ? '🎬' : item.media_type === 'audio' ? '🎵' : '🔗'}</div>}
                             <figcaption className="text-[10px] text-muted truncate mt-0.5">{item.caption ?? ''}</figcaption>
                           </figure>
                         ))}

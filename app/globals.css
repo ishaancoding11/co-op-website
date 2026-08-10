@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf7f2;   /* warm sand */
-  --foreground: #2d2a26;   /* driftwood ink */
-  --muted: #8a8378;
-  --card: #ffffff;
-  --line: #e9e2d6;
-  --accent: #c2703e;       /* terracotta */
-  --accent-soft: #f3e3d3;
-  --sea: #4f7a75;          /* eucalyptus sea */
-  --sea-soft: #e3edeb;
+  --background: #ffffff;
+  --foreground: #231f1d;   /* charcoal */
+  --muted: #7a7370;
+  --card: #fdfcfb;         /* off-white */
+  --line: #e8e5e2;
+  --accent: #db6239;       /* sampled from the logo mark */
+  --accent-soft: #faece7;
+  --sea: #4f8577;          /* kept, muted: functional status signals only —
+                               ratings, verified/positive states, success —
+                               not decorative, so not part of the orange sweep */
+  --sea-soft: #e4efec;
   --gold: #d9a441;
 }
 

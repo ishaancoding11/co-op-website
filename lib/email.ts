@@ -30,12 +30,16 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 export function emailShell(title: string, body: string, ctaHref?: string, ctaLabel?: string) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   const url = ctaHref ? (ctaHref.startsWith('http') ? ctaHref : site + ctaHref) : null;
+  // Hex values are hardcoded, not read from app/globals.css: most email
+  // clients strip <style> tags and don't support CSS custom properties, so
+  // this is the one legitimate exception to keeping colors in a single
+  // token file — kept in sync with it by hand.
   return `
-  <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#2d2a26">
-    <p style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#b0876a">Co-op</p>
+  <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#231f1d">
+    <p style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c9744f">Co-op</p>
     <h1 style="font-size:22px;margin:8px 0 16px">${title}</h1>
-    <p style="font-size:15px;line-height:1.6;color:#5b564f">${body}</p>
-    ${url ? `<p style="margin-top:24px"><a href="${url}" style="background:#2d2a26;color:#faf7f2;padding:12px 22px;border-radius:999px;text-decoration:none;font-size:14px">${ctaLabel ?? 'Open Co-op'}</a></p>` : ''}
-    <p style="margin-top:32px;font-size:12px;color:#a39d94">Co-op · local creatives × small businesses · Newport Beach & Corona del Mar</p>
+    <p style="font-size:15px;line-height:1.6;color:#7a7370">${body}</p>
+    ${url ? `<p style="margin-top:24px"><a href="${url}" style="background:#db6239;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;font-size:14px">${ctaLabel ?? 'Open Co-op'}</a></p>` : ''}
+    <p style="margin-top:32px;font-size:12px;color:#7a7370">Co-op · local creatives × small businesses · Newport Beach & Corona del Mar</p>
   </div>`;
 }

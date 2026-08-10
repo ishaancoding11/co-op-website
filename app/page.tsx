@@ -23,7 +23,7 @@ export default async function Landing() {
       <div className="text-center max-w-2xl mx-auto">
         <p className="text-xs tracking-[0.25em] uppercase text-accent font-semibold">Find your local creative match.</p>
         <h1 className="font-display text-4xl md:text-6xl mt-4 leading-[1.05]">
-          Local creatives.<br />Local businesses.<br /><em className="text-sea not-italic">One swipe apart.</em>
+          Local creatives.<br />Local businesses.<br /><em className="text-accent not-italic">One swipe apart.</em>
         </h1>
         <p className="text-muted mt-5 md:text-lg">
           Co-op connects small businesses with nearby freelance creatives for photos, reels, branding, murals, and live music. Personal, quick, and easy — and Co-op never takes a cut.
@@ -58,7 +58,7 @@ export default async function Landing() {
           <Link href="/browse" className="rounded-full border border-line bg-card py-3 text-sm font-medium hover:border-accent hover:text-accent transition-colors">
             Browse creatives
           </Link>
-          <Link href="/jobs" className="rounded-full border border-line bg-card py-3 text-sm font-medium hover:border-sea hover:text-sea transition-colors">
+          <Link href="/jobs" className="rounded-full border border-line bg-card py-3 text-sm font-medium hover:border-accent hover:text-accent transition-colors">
             Browse jobs
           </Link>
         </div>

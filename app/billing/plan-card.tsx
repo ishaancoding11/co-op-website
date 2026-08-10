@@ -30,12 +30,12 @@ export function PlanCard({ plan, label, blurb, features, monthly, annual, annual
             </div>
           </div>
         )}
-        {interval === 'annual' && annualSavingsLabel && <p className="text-xs text-sea font-medium mt-1.5">{annualSavingsLabel}</p>}
+        {interval === 'annual' && annualSavingsLabel && <p className="text-xs text-accent font-medium mt-1.5">{annualSavingsLabel}</p>}
         {interval === 'annual' && annual != null && <p className="text-xs text-muted">${annual.toFixed(2)} billed yearly</p>}
       </div>
 
       <ul className="text-sm text-muted mt-4 space-y-1.5 flex-1">
-        {features.map(f => <li key={f} className="flex gap-2"><span className="text-sea" aria-hidden>✓</span>{f}</li>)}
+        {features.map(f => <li key={f} className="flex gap-2"><span className="text-accent" aria-hidden>✓</span>{f}</li>)}
       </ul>
 
       {current ? (

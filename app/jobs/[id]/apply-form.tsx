@@ -32,7 +32,7 @@ export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; bus
                   {selected && <span className="absolute top-1 right-1 z-10 h-5 w-5 rounded-full bg-accent text-white text-xs flex items-center justify-center">✓</span>}
                   {p.media_type === 'image' && p.media_url
                     ? <img src={p.media_url} alt={p.caption ?? 'Portfolio piece'} className="h-20 w-full object-cover" />
-                    : <div className="h-20 flex items-center justify-center text-xl bg-sea-soft" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : '🔗'}</div>}
+                    : <div className="h-20 flex items-center justify-center text-xl bg-line" aria-hidden>{p.media_type === 'video' ? '🎬' : p.media_type === 'audio' ? '🎵' : '🔗'}</div>}
                   <span className="block px-1.5 py-1 text-[10px] text-muted truncate">{p.is_favorite ? '★ ' : ''}{p.caption ?? 'Untitled'}</span>
                 </button>
               );

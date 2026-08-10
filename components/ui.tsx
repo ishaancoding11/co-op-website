@@ -44,7 +44,7 @@ export function Avatar({ name, url, size = 40 }: { name: string; url?: string | 
   const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   if (url) return <img src={url} alt={name} width={size} height={size} className="rounded-full object-cover" style={{ width: size, height: size }} />;
   return (
-    <div aria-hidden className="rounded-full bg-sea-soft text-sea flex items-center justify-center font-semibold"
+    <div aria-hidden className="rounded-full bg-line text-muted flex items-center justify-center font-semibold"
       style={{ width: size, height: size, fontSize: size * 0.38 }}>{initials || '?'}</div>
   );
 }
@@ -89,7 +89,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
   return (
     <div className="text-center py-16 px-6">
       <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center" aria-hidden>
-        <img src="/coop-logo-full.svg" alt="" width={34} height={28} />
+        <img src="/coop-logo-full.svg" alt="" width={32} height={32} />
       </div>
       <h2 className="text-lg font-semibold">{title}</h2>
       {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}
@@ -157,7 +157,7 @@ export function AvailabilityStrip({ days }: { days: string[] }) {
     <div className="flex gap-1" role="img" aria-label={`Available on ${WEEKDAYS.filter(d => set.has(d.key)).map(d => d.label).join(', ')}`}>
       {WEEKDAYS.map(d => (
         <span key={d.key} aria-hidden
-          className={`rounded-lg px-2 py-1 text-[11px] font-semibold ${set.has(d.key) ? 'bg-sea text-white' : 'bg-line/60 text-muted line-through decoration-muted/40'}`}>
+          className={`rounded-lg px-2 py-1 text-[11px] font-semibold ${set.has(d.key) ? 'bg-accent text-white' : 'bg-line/60 text-muted line-through decoration-muted/40'}`}>
           {d.label}
         </span>
       ))}

@@ -10,7 +10,7 @@ export function PhotoUploader({ name, label, currentUrl, currentName }: {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="rounded-full p-0.5 bg-gradient-to-tr from-accent via-gold to-sea shrink-0">
+      <div className="rounded-full p-0.5 bg-gradient-to-tr from-accent to-gold shrink-0">
         <div className="rounded-full p-0.5 bg-background">
           {preview
             ? <img src={preview} alt="" width={72} height={72} className="rounded-full object-cover" style={{ width: 72, height: 72 }} />

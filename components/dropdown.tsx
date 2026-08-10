@@ -129,7 +129,7 @@ function Option({ option, selected, highlighted, onSelect }: {
       onClick={() => onSelect(option.value)}
       onMouseEnter={e => e.currentTarget.focus({ preventScroll: true })}
       className={`mx-1.5 flex w-[calc(100%-0.75rem)] items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm text-left transition-colors ${
-        selected ? 'bg-accent-soft text-accent font-medium' : highlighted ? 'bg-sea-soft text-foreground' : 'text-foreground hover:bg-sea-soft'
+        selected ? 'bg-accent-soft text-accent font-medium' : highlighted ? 'bg-line text-foreground' : 'text-foreground hover:bg-line'
       }`}
     >
       <span className="truncate">{option.label}</span>

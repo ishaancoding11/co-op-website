@@ -144,7 +144,7 @@ export default async function JobFeed({ searchParams }: {
                 )}
                 <Link href={`/jobs/${j.id}`} className="block h-full">
                   <Card className="overflow-hidden h-full flex flex-col hover:shadow-[0_8px_30px_rgba(45,42,38,0.1)] transition-shadow">
-                    <div className="h-40 bg-sea-soft flex items-center justify-center relative">
+                    <div className="h-40 bg-line flex items-center justify-center relative">
                       <span className="text-5xl" aria-hidden>{CATEGORY_ICON[j.category]}</span>
                       {priceRange(j.budget_min, j.budget_max) && (
                         <span className="absolute bottom-3 left-3 rounded-lg bg-foreground/85 text-background px-2.5 py-1 text-xs font-semibold backdrop-blur">
