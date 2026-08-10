@@ -10,28 +10,38 @@ export default async function MessagePage({ params }: { params: Promise<{ matchI
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
-  // business_profiles is fetched separately below, not embedded: matches.
-  // business_id is a NOT NULL FK, so an embed resolves as an inner join —
-  // if the creative viewing this thread has blocked (or been blocked by)
-  // the business, business_select's RLS would hide that row and the whole
-  // thread would 404 instead of just missing the business's name/badge.
-  // jobs(title) stays embedded: matches.job_id is nullable, so that embed
-  // is always a safe left join regardless of RLS.
-  const { data: m } = await supabase.from('matches')
-    .select('*, users:creative_id(display_name), jobs(title)')
-    .eq('id', matchId).maybeSingle();
+  // No embeds at all on this query — deliberately. business_profiles was
+  // dropped (matches.business_id is a NOT NULL FK; an embed there resolves
+  // as an inner join, and business_select's RLS hiding that row over a
+  // block would 404 the whole thread). users:creative_id(display_name) is
+  // also dropped: confirmed via the applicants page that this exact embed
+  // can silently empty a matches query even when RLS on the base table
+  // itself would allow the row through, for reasons independent of RLS
+  // strictness. jobs(title) was dropped too even though matches.job_id is
+  // nullable (safe on its own) — no embeds at all here until there's a
+  // reason to trust any of them again. `error` is logged instead of
+  // silently discarded, so a real query failure doesn't read as "not
+  // found" with no way to tell the two apart.
+  const { data: m, error: matchError } = await supabase.from('matches').select('*').eq('id', matchId).maybeSingle();
+  if (matchError) console.error('[messages] match query failed:', matchError.message);
   if (!m || !m.is_matched) notFound();
 
   const isBiz = m.business_id === userId;
   const otherId = isBiz ? m.creative_id : m.business_id;
   let otherName = 'Business';
   let verified = false;
+  let jobTitle: string | null = null;
   if (isBiz) {
-    otherName = displayNameFor((m.users as { display_name: string | null } | null)?.display_name);
+    const { data: u } = await supabase.from('users').select('display_name').eq('id', m.creative_id).maybeSingle();
+    otherName = displayNameFor(u?.display_name);
   } else {
     const { data: biz } = await supabase.from('business_profiles').select('business_name, is_verified').eq('user_id', m.business_id).maybeSingle();
     otherName = biz?.business_name ?? 'Business';
     verified = biz?.is_verified ?? false;
+  }
+  if (m.job_id) {
+    const { data: job } = await supabase.from('jobs').select('title').eq('id', m.job_id).maybeSingle();
+    jobTitle = job?.title ?? null;
   }
 
   const { data: messages } = await supabase.from('messages').select('*').eq('match_id', matchId).order('created_at').limit(200);
@@ -48,7 +58,7 @@ export default async function MessagePage({ params }: { params: Promise<{ matchI
             <Link href={isBiz ? `/creatives/${otherId}` : `/business/${otherId}`} className="hover:underline underline-offset-2">{otherName}</Link>
             {verified && <VerifiedBadge small />}
           </p>
-          {(m.jobs as { title: string } | null)?.title && <p className="text-xs text-muted">Job: {(m.jobs as { title: string }).title}</p>}
+          {jobTitle && <p className="text-xs text-muted">Job: {jobTitle}</p>}
         </div>
         {agreement
           ? <LinkButton href={`/agreements/${agreement.id}`} size="sm" variant="secondary">Agreement · {agreement.status.replace(/_/g, ' ')}</LinkButton>

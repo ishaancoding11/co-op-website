@@ -11,26 +11,32 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
-  // business_profiles is fetched separately below, not embedded on the
-  // agreement query: agreements.business_id is a NOT NULL FK, so an embed
-  // resolves as an inner join. A booking is supposed to "stay fully
-  // readable" regardless of what happens between the two parties later
-  // (that's already the design for suspension — see 0009_admin.sql), so a
-  // later block must not make an existing agreement 404 just because the
-  // business's display name became RLS-invisible to fetch.
-  const { data: a } = await supabase.from('agreements')
-    .select('*, users:creative_id(display_name), jobs(title)')
-    .eq('id', id).maybeSingle();
+  // No embeds at all on this query — deliberately. business_profiles was
+  // dropped (agreements.business_id is a NOT NULL FK; an embed resolves as
+  // an inner join, and a booking is supposed to "stay fully readable"
+  // regardless of what happens between the two parties later — same
+  // principle as suspension in 0009_admin.sql). users:creative_id
+  // (display_name) and jobs(title) are dropped too: confirmed via the
+  // applicants/messages pages that the users:creative_id embed specifically
+  // can silently empty a query for reasons independent of RLS strictness
+  // on the base table — an agreement must never 404 because of it.
+  const { data: a } = await supabase.from('agreements').select('*').eq('id', id).maybeSingle();
   if (!a) notFound();
 
   const isBiz = a.business_id === userId;
   const otherId = isBiz ? a.creative_id : a.business_id;
   let otherName = 'Business';
+  let jobTitle: string | null = null;
   if (isBiz) {
-    otherName = displayNameFor((a.users as { display_name: string | null } | null)?.display_name);
+    const { data: u } = await supabase.from('users').select('display_name').eq('id', a.creative_id).maybeSingle();
+    otherName = displayNameFor(u?.display_name);
   } else {
     const { data: biz } = await supabase.from('business_profiles').select('business_name').eq('user_id', a.business_id).maybeSingle();
     otherName = biz?.business_name ?? 'Business';
+  }
+  if (a.job_id) {
+    const { data: job } = await supabase.from('jobs').select('title').eq('id', a.job_id).maybeSingle();
+    jobTitle = job?.title ?? null;
   }
   const iCompleted = isBiz ? !!a.completed_by_business_at : !!a.completed_by_creative_at;
   const theyCompleted = isBiz ? !!a.completed_by_creative_at : !!a.completed_by_business_at;
@@ -47,7 +53,7 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
       </div>
 
       <Card className="p-6 mt-5 space-y-3">
-        {(a.jobs as { title: string } | null)?.title && <p className="text-sm"><span className="text-muted">Job:</span> {(a.jobs as { title: string }).title}</p>}
+        {jobTitle && <p className="text-sm"><span className="text-muted">Job:</span> {jobTitle}</p>}
         <p className="text-sm whitespace-pre-wrap"><span className="text-muted">Scope:</span> {a.scope ?? '—'}</p>
         <p className="text-sm"><span className="text-muted">Agreed price:</span> {a.agreed_price != null ? `$${a.agreed_price}` : 'TBD'}</p>
         <NoFeeNote />
