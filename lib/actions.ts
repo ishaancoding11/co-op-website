@@ -220,27 +220,49 @@ export async function businessAct(creativeId: string, action: 'liked' | 'passed'
 }
 
 // Creative swipes a job right (apply) or left (pass), or likes a business directly
-export async function applyToJob(prev: unknown, formData: FormData): Promise<{ error?: string; ok?: boolean }> {
+const QUOTA_TRIAL_MESSAGE = 'You’ve used your free trial application — subscribe to keep applying.';
+const QUOTA_MONTHLY_MESSAGE = 'You’ve reached your monthly application limit — upgrade to Premium for unlimited applications.';
+
+export async function applyToJob(prev: unknown, formData: FormData): Promise<{ error?: string; ok?: boolean; quotaExceeded?: boolean }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=creative');
   const jobId = formData.get('job_id') as string;
   const businessId = formData.get('business_id') as string;
   const pitch = (formData.get('pitch') as string) || null; // optional short note
   const portfolioIds = formData.getAll('portfolio_ids') as string[];
+
+  // Checked before attempting the write so the message is specific (trial
+  // vs monthly cap) instead of generic — matches_application_quota_guard
+  // is still the real enforcement and would reject this regardless if this
+  // pre-check were ever bypassed or raced.
+  const { data: quota } = (await supabase.rpc('my_creative_quota').maybeSingle()) as
+    { data: { plan: string | null; can_apply: boolean } | null };
+  if (quota && !quota.can_apply) {
+    return { error: quota.plan ? QUOTA_MONTHLY_MESSAGE : QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+  }
+
   const existing = await findPairMatch(supabase, businessId, user.id, jobId);
   if (existing) {
     const { error } = await supabase.from('matches').update({
       creative_action: 'liked', pitch: pitch ?? existing.pitch,
       pitch_portfolio_ids: portfolioIds.length ? portfolioIds : existing.pitch_portfolio_ids,
     }).eq('id', existing.id);
-    if (error) return { error: friendlyDbError('applyToJob update', error) };
+    if (error) {
+      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+      if (error.message.includes('ACCOUNT_SUSPENDED')) return { error: 'Your account is suspended and can’t apply to new jobs.' };
+      return { error: friendlyDbError('applyToJob update', error) };
+    }
   } else {
     const { error } = await supabase.from('matches').insert({
       business_id: businessId, creative_id: user.id, job_id: jobId,
       source: 'job_apply', pitch, pitch_portfolio_ids: portfolioIds,
       creative_action: 'liked', application_status: 'applied',
     });
-    if (error) return { error: friendlyDbError('applyToJob insert', error) };
+    if (error) {
+      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+      if (error.message.includes('ACCOUNT_SUSPENDED')) return { error: 'Your account is suspended and can’t apply to new jobs.' };
+      return { error: friendlyDbError('applyToJob insert', error) };
+    }
     await emailUser(supabase, businessId, 'New application on Co-op', 'New application', 'A creative applied to your job. Compare applicants on Co-op.', `/jobs/${jobId}/applicants`);
   }
   revalidatePath(`/jobs/${jobId}`);

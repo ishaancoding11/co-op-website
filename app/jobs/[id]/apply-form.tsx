@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
+import Link from 'next/link';
 import { applyToJob } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
 import type { PortfolioItem } from '@/lib/types';
@@ -46,7 +47,11 @@ export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; bus
         <textarea name="pitch" rows={2} className={inputCls} placeholder="Anything worth adding — availability, a relevant idea…" />
       </label>
 
-      {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
+      {state?.quotaExceeded ? (
+        <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">
+          {state.error} <Link href="/billing" className="underline underline-offset-2 font-medium">Go to Billing</Link>
+        </p>
+      ) : state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
       <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
         {pending ? 'Sending…' : 'Apply'}
       </button>

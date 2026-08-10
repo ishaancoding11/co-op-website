@@ -11,7 +11,7 @@ export default async function Billing() {
   if (!activeRole) redirect('/');
 
   const isCreative = activeRole === 'creative';
-  type CreativeQuota = { trialing: boolean; trial_ends_at: string | null; plan: SubscriptionPlan | null; monthly_limit: number | null; used: number; unlimited: boolean; can_accept: boolean };
+  type CreativeQuota = { trialing: boolean; trial_ends_at: string | null; plan: SubscriptionPlan | null; monthly_limit: number | null; used: number; unlimited: boolean; can_apply: boolean };
   type BusinessQuota = { trialing: boolean; trial_ends_at: string | null; plan: SubscriptionPlan | null; job_cap: number | null; active_jobs: number; unlimited: boolean; can_post: boolean };
   const { data: quota } = isCreative
     ? (await supabase.rpc('my_creative_quota').maybeSingle()) as { data: CreativeQuota | null }
@@ -41,17 +41,17 @@ export default async function Billing() {
           <p className="text-sm">
             You&rsquo;re on <strong>{PLAN_LABELS[currentPlan]}</strong>.
             {isCreative
-              ? creativeQuota?.unlimited ? ' Unlimited job applications/acceptances.' : ` ${creativeQuota?.used ?? 0} of ${creativeQuota?.monthly_limit ?? '—'} accepted this month.`
+              ? creativeQuota?.unlimited ? ' Unlimited job applications.' : ` ${creativeQuota?.used ?? 0} of ${creativeQuota?.monthly_limit ?? '—'} applied to this month.`
               : businessQuota?.unlimited ? ' Unlimited active job posts.' : ` ${businessQuota?.active_jobs ?? 0} of ${businessQuota?.job_cap ?? '—'} active job posts.`}
           </p>
         ) : trialing ? (
           <p className="text-sm">
             You&rsquo;re on your <strong>free trial</strong> until {trialEndsAt?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
-            {isCreative ? ' You can accept 1 job during your trial.' : ' You can post 1 job during your trial.'}
+            {isCreative ? ' You can apply to 1 job during your trial.' : ' You can post 1 job during your trial.'}
           </p>
         ) : (
           <p className="text-sm text-accent font-medium">
-            Your free trial has ended. Subscribe below to {isCreative ? 'accept new jobs' : 'post new jobs'} — your existing matches and messages stay available either way.
+            Your free trial has ended. Subscribe below to {isCreative ? 'apply to new jobs' : 'post new jobs'} — your existing matches and messages stay available either way.
           </p>
         )}
         {currentPlan && (
