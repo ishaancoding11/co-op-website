@@ -8,10 +8,23 @@ export default async function Dashboard() {
   const { userId, activeRole, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
+  // business_profiles is fetched separately below, not embedded on the
+  // agreements query: agreements.business_id is a NOT NULL FK, so an embed
+  // resolves as an inner join. Bookings are supposed to stay fully readable
+  // regardless of what happens between the two parties later (same
+  // principle as suspension in 0009_admin.sql) — a booking history entry
+  // must never silently disappear from this list just because a later
+  // block made the business's display name RLS-invisible to fetch.
   const { data: agreements } = await supabase.from('agreements')
-    .select('*, business_profiles(business_name), users:creative_id(display_name), jobs(title)')
+    .select('*, users:creative_id(display_name), jobs(title)')
     .or(`business_id.eq.${userId},creative_id.eq.${userId}`)
     .order('created_at', { ascending: false });
+
+  const businessIds = [...new Set((agreements ?? []).map(a => a.business_id))];
+  const { data: bizRows } = businessIds.length
+    ? await supabase.from('business_profiles').select('user_id, business_name').in('user_id', businessIds)
+    : { data: [] };
+  const businesses = new Map((bizRows ?? []).map(b => [b.user_id, b.business_name]));
 
   const active = (agreements ?? []).filter(a => !['completed', 'cancelled'].includes(a.status));
   const past = (agreements ?? []).filter(a => ['completed', 'cancelled'].includes(a.status));
@@ -20,7 +33,7 @@ export default async function Dashboard() {
     const isBiz = a.business_id === userId;
     const otherName = isBiz
       ? displayNameFor((a.users as { display_name: string | null } | null)?.display_name)
-      : ((a.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
+      : (businesses.get(a.business_id) ?? 'Business');
     const needsMe = (a.status === 'accepted' || a.status === 'in_progress') && !(isBiz ? a.completed_by_business_at : a.completed_by_creative_at) && (isBiz ? a.completed_by_creative_at : a.completed_by_business_at);
     return (
       <Link href={`/agreements/${a.id}`} className="block">

@@ -10,17 +10,29 @@ export default async function MessagePage({ params }: { params: Promise<{ matchI
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
+  // business_profiles is fetched separately below, not embedded: matches.
+  // business_id is a NOT NULL FK, so an embed resolves as an inner join —
+  // if the creative viewing this thread has blocked (or been blocked by)
+  // the business, business_select's RLS would hide that row and the whole
+  // thread would 404 instead of just missing the business's name/badge.
+  // jobs(title) stays embedded: matches.job_id is nullable, so that embed
+  // is always a safe left join regardless of RLS.
   const { data: m } = await supabase.from('matches')
-    .select('*, business_profiles(business_name, is_verified), users:creative_id(display_name), jobs(title)')
+    .select('*, users:creative_id(display_name), jobs(title)')
     .eq('id', matchId).maybeSingle();
   if (!m || !m.is_matched) notFound();
 
   const isBiz = m.business_id === userId;
   const otherId = isBiz ? m.creative_id : m.business_id;
-  const otherName = isBiz
-    ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
-    : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
-  const verified = !isBiz && (m.business_profiles as { is_verified: boolean } | null)?.is_verified;
+  let otherName = 'Business';
+  let verified = false;
+  if (isBiz) {
+    otherName = displayNameFor((m.users as { display_name: string | null } | null)?.display_name);
+  } else {
+    const { data: biz } = await supabase.from('business_profiles').select('business_name, is_verified').eq('user_id', m.business_id).maybeSingle();
+    otherName = biz?.business_name ?? 'Business';
+    verified = biz?.is_verified ?? false;
+  }
 
   const { data: messages } = await supabase.from('messages').select('*').eq('match_id', matchId).order('created_at').limit(200);
   const { data: agreement } = await supabase.from('agreements').select('id, status').eq('match_id', matchId).order('created_at', { ascending: false }).limit(1).maybeSingle();

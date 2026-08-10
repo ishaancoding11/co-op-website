@@ -11,16 +11,27 @@ export default async function AgreementPage({ params }: { params: Promise<{ id: 
   const { userId, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
+  // business_profiles is fetched separately below, not embedded on the
+  // agreement query: agreements.business_id is a NOT NULL FK, so an embed
+  // resolves as an inner join. A booking is supposed to "stay fully
+  // readable" regardless of what happens between the two parties later
+  // (that's already the design for suspension — see 0009_admin.sql), so a
+  // later block must not make an existing agreement 404 just because the
+  // business's display name became RLS-invisible to fetch.
   const { data: a } = await supabase.from('agreements')
-    .select('*, business_profiles(business_name), users:creative_id(display_name), jobs(title)')
+    .select('*, users:creative_id(display_name), jobs(title)')
     .eq('id', id).maybeSingle();
   if (!a) notFound();
 
   const isBiz = a.business_id === userId;
   const otherId = isBiz ? a.creative_id : a.business_id;
-  const otherName = isBiz
-    ? displayNameFor((a.users as { display_name: string | null } | null)?.display_name)
-    : ((a.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
+  let otherName = 'Business';
+  if (isBiz) {
+    otherName = displayNameFor((a.users as { display_name: string | null } | null)?.display_name);
+  } else {
+    const { data: biz } = await supabase.from('business_profiles').select('business_name').eq('user_id', a.business_id).maybeSingle();
+    otherName = biz?.business_name ?? 'Business';
+  }
   const iCompleted = isBiz ? !!a.completed_by_business_at : !!a.completed_by_creative_at;
   const theyCompleted = isBiz ? !!a.completed_by_creative_at : !!a.completed_by_business_at;
 

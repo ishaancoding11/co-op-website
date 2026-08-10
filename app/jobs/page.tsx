@@ -25,7 +25,12 @@ export default async function JobFeed({ searchParams }: {
   const sp = await searchParams;
   const { userId, activeRole, creative, supabase } = await getViewer();
 
-  let q = supabase.from('jobs').select('*, business_profiles(business_name, neighborhood, is_verified, logo_url)').eq('status', 'open').order('created_at', { ascending: false });
+  // business_profiles is fetched separately below, not embedded here: jobs.
+  // business_id is a NOT NULL FK, so PostgREST resolves that embed as an
+  // inner join — if business_select's RLS hides the row (viewer and poster
+  // have blocked each other), the whole job would silently vanish from the
+  // feed instead of just missing its business details.
+  let q = supabase.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
   if (sp.category) q = q.eq('category', sp.category);
   if (sp.location) q = q.eq('location', sp.location);
   // Budget slider: keep jobs whose budget overlaps the selected range (cap = unbounded top).
@@ -38,11 +43,16 @@ export default async function JobFeed({ searchParams }: {
   // non-subscribers (see 0008_subscriptions.sql, business_standard plan).
   const businessIds = [...new Set((fetched ?? []).map(j => j.business_id))];
   const priority = new Set<string>();
+  const businesses = new Map<string, { business_name: string; neighborhood: string | null; is_verified: boolean; logo_url: string | null }>();
   if (businessIds.length) {
-    await Promise.all(businessIds.map(async id => {
-      const { data } = await supabase.rpc('current_business_plan', { p_business: id });
-      if (data) priority.add(id);
-    }));
+    const [, { data: bps }] = await Promise.all([
+      Promise.all(businessIds.map(async id => {
+        const { data } = await supabase.rpc('current_business_plan', { p_business: id });
+        if (data) priority.add(id);
+      })),
+      supabase.from('business_profiles').select('user_id, business_name, neighborhood, is_verified, logo_url').in('user_id', businessIds),
+    ]);
+    for (const bp of bps ?? []) businesses.set(bp.user_id, bp);
   }
 
   // Sorting (creative-facing): price asc/desc, or "Featured" — best fit for this
@@ -121,7 +131,8 @@ export default async function JobFeed({ searchParams }: {
         <EmptyState title="No open jobs match" body="Check back soon — or make yourself discoverable so businesses find you first." />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-          {(jobs as (Job & { business_profiles: { business_name: string; neighborhood: string | null; is_verified: boolean } | null })[]).map(j => {
+          {(jobs as Job[]).map(j => {
+            const biz = businesses.get(j.business_id);
             const remaining = daysRemaining(j.deadline);
             return (
               <div key={j.id} className="relative group">
@@ -147,9 +158,9 @@ export default async function JobFeed({ searchParams }: {
                       </div>
                       {userId ? (
                         <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                          {j.business_profiles?.business_name}
-                          {j.business_profiles?.is_verified && <VerifiedBadge small />}
-                          · {j.location ?? j.business_profiles?.neighborhood}
+                          {biz?.business_name}
+                          {biz?.is_verified && <VerifiedBadge small />}
+                          · {j.location ?? biz?.neighborhood}
                         </p>
                       ) : (
                         <p className="text-xs text-muted mt-0.5">{j.location ?? ''} · <span className="underline underline-offset-2">Sign in to see who&rsquo;s hiring</span></p>

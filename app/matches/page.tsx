@@ -8,16 +8,29 @@ export default async function Matches() {
   const { userId, activeRole, supabase } = await getViewer();
   if (!userId) redirect('/login');
 
+  // business_profiles is fetched separately below, not embedded: matches.
+  // business_id is a NOT NULL FK, so an embed resolves as an inner join —
+  // any match with a business the creative has blocked (or been blocked by)
+  // would silently vanish from this whole list instead of just showing a
+  // blank name. jobs(title) stays embedded: matches.job_id is nullable, so
+  // that embed is always a safe left join regardless of RLS.
   const { data: matches } = await supabase.from('matches')
-    .select('*, business_profiles(business_name, logo_url, is_verified), users:creative_id(display_name), jobs(title)')
+    .select('*, users:creative_id(display_name), jobs(title)')
     .eq('is_matched', true)
     .or(`business_id.eq.${userId},creative_id.eq.${userId}`)
     .order('matched_at', { ascending: false });
 
   const matchIds = (matches ?? []).map(m => m.id);
-  const { data: lastMsgs } = matchIds.length
-    ? await supabase.from('messages').select('match_id, body, created_at, sender_id, read_at').in('match_id', matchIds).order('created_at', { ascending: false })
-    : { data: [] };
+  const businessIds = [...new Set((matches ?? []).map(m => m.business_id))];
+  const [{ data: lastMsgs }, { data: bizRows }] = await Promise.all([
+    matchIds.length
+      ? supabase.from('messages').select('match_id, body, created_at, sender_id, read_at').in('match_id', matchIds).order('created_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+    businessIds.length
+      ? supabase.from('business_profiles').select('user_id, business_name, logo_url, is_verified').in('user_id', businessIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const businesses = new Map((bizRows ?? []).map(b => [b.user_id, b]));
 
   return (
     <div className="py-8 max-w-2xl mx-auto">
@@ -31,10 +44,11 @@ export default async function Matches() {
         <div className="space-y-3 mt-6">
           {matches.map(m => {
             const isBiz = m.business_id === userId;
+            const biz = businesses.get(m.business_id);
             const otherName = isBiz
               ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
-              : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'Business');
-            const verified = !isBiz && (m.business_profiles as { is_verified: boolean } | null)?.is_verified;
+              : (biz?.business_name ?? 'Business');
+            const verified = !isBiz && !!biz?.is_verified;
             const last = (lastMsgs ?? []).find(x => x.match_id === m.id);
             const unread = (lastMsgs ?? []).some(x => x.match_id === m.id && x.sender_id !== userId && !x.read_at);
             return (

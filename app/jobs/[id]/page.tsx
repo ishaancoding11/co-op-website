@@ -10,9 +10,16 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const { userId, creative, activeRole, supabase } = await getViewer();
 
-  const { data: j } = await supabase.from('jobs').select('*, business_profiles(business_name, neighborhood, is_verified, user_id)').eq('id', id).maybeSingle();
+  const { data: j } = await supabase.from('jobs').select('*').eq('id', id).maybeSingle();
   if (!j) notFound();
-  const biz = j.business_profiles as { business_name: string; neighborhood: string | null; is_verified: boolean; user_id: string };
+  // business_profiles fetched separately, not embedded: jobs.business_id is
+  // a NOT NULL FK, so an embed here resolves as an inner join — if the
+  // viewer and the poster have blocked each other, business_select's RLS
+  // would hide that row and the embed would 404 the whole job page instead
+  // of just missing the business's name/badge.
+  const { data: bizRow } = await supabase.from('business_profiles')
+    .select('business_name, neighborhood, is_verified').eq('user_id', j.business_id).maybeSingle();
+  const biz = bizRow ?? { business_name: 'A local business', neighborhood: null, is_verified: false };
   const isOwner = userId === j.business_id;
 
   let myMatch = null;
@@ -35,7 +42,7 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
         <div>
           <h1 className="font-display text-3xl">{j.title}</h1>
           <p className="text-sm text-muted mt-1 flex items-center gap-1.5">
-            <Link href={`/business/${biz.user_id}`} className="underline underline-offset-2">{biz.business_name}</Link>
+            <Link href={`/business/${j.business_id}`} className="underline underline-offset-2">{biz.business_name}</Link>
             {biz.is_verified && <VerifiedBadge small />} · {j.location ?? biz.neighborhood}
           </p>
         </div>

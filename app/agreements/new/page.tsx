@@ -10,16 +10,24 @@ export default async function NewAgreement({ searchParams }: { searchParams: Pro
   if (!userId) redirect('/login');
   if (!match) notFound();
 
+  // business_profiles is fetched separately below, not embedded: matches.
+  // business_id is a NOT NULL FK, so an embed resolves as an inner join —
+  // if the creative has blocked (or been blocked by) this business, the
+  // whole match would 404 here instead of just missing the business's name.
   const { data: m } = await supabase.from('matches')
-    .select('*, business_profiles(business_name), users:creative_id(display_name), jobs(title)')
+    .select('*, users:creative_id(display_name), jobs(title)')
     .eq('id', match).maybeSingle();
   if (!m || !m.is_matched) notFound();
 
   const { data: packages } = await supabase.from('packages').select('*').eq('creative_id', m.creative_id).order('price');
   const isBiz = m.business_id === userId;
-  const otherName = isBiz
-    ? displayNameFor((m.users as { display_name: string | null } | null)?.display_name)
-    : ((m.business_profiles as { business_name: string } | null)?.business_name ?? 'the business');
+  let otherName = 'the business';
+  if (isBiz) {
+    otherName = displayNameFor((m.users as { display_name: string | null } | null)?.display_name);
+  } else {
+    const { data: biz } = await supabase.from('business_profiles').select('business_name').eq('user_id', m.business_id).maybeSingle();
+    otherName = biz?.business_name ?? 'the business';
+  }
 
   return (
     <div className="py-10 max-w-xl mx-auto">
