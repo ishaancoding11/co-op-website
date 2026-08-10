@@ -83,13 +83,21 @@ export function StatusForm({ userId, status }: { userId: string; status: string 
  * signing up again. "Unban" (BannedEmails below) only lifts that future
  * block — it can never bring the deleted data back, so the confirmation
  * copy says so plainly. Admin-only, same tier as suspend.
+ *
+ * No onSubmit/confirm() dialog on purpose, same as StatusForm below: this
+ * file is a Server Component (no "use client"), and an event handler can't
+ * cross that boundary — passing one here isn't a style choice, it's a hard
+ * RSC serialization error that only surfaces at request time, not build
+ * time (this route is dynamic, so `next build` never renders it to catch
+ * it). The friction is the collapsed <details>, the required reason, and
+ * the warning copy below the button, matching the plain-server-actions
+ * design already stated in lib/admin-actions.ts.
  */
 export function DeleteBanForm({ userId }: { userId: string }) {
   return (
     <details className="mt-2">
       <summary className="cursor-pointer text-xs text-red-700 hover:text-red-800">Delete &amp; ban this account</summary>
-      <form action={deleteAndBanUser} className="mt-2 flex flex-wrap items-center gap-2"
-        onSubmit={e => { if (!confirm('This permanently deletes all of this account’s data and blocks the email from signing up again. This cannot be undone. Continue?')) e.preventDefault(); }}>
+      <form action={deleteAndBanUser} className="mt-2 flex flex-wrap items-center gap-2">
         <input type="hidden" name="userId" value={userId} />
         <input className={`${inputCls} max-w-sm flex-1`} name="reason" required minLength={3} maxLength={500}
           placeholder="Reason (kept in the audit log)" />
