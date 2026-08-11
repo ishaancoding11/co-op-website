@@ -28,7 +28,10 @@ export default async function Landing() {
         <p className="text-muted mt-5 md:text-lg">
           Co-op connects small businesses with nearby freelance creatives for photos, reels, branding, murals, and live music. Personal, quick, and easy — and Co-op never takes a cut.
         </p>
-        <p className="text-sm text-muted mt-4">
+        <p className="text-accent font-medium mt-4 text-sm">
+          Subscribe now — you won&rsquo;t be charged until your first match.
+        </p>
+        <p className="text-sm text-muted mt-2">
           Already have an account? <Link href="/login?mode=login" className="text-foreground font-medium underline underline-offset-2">Log in</Link>
         </p>
       </div>
@@ -63,10 +66,11 @@ export default async function Landing() {
           </Link>
         </div>
       </div>
-      <div className="text-center mt-16 grid grid-cols-3 max-w-lg mx-auto text-sm">
+      <div className="text-center mt-16 grid grid-cols-2 sm:grid-cols-4 gap-y-6 max-w-2xl mx-auto text-sm">
         <div><p className="font-display text-2xl">0%</p><p className="text-muted text-xs mt-1">platform fees</p></div>
         <div><p className="font-display text-2xl">Local</p><p className="text-muted text-xs mt-1">your neighborhood only</p></div>
         <div><p className="font-display text-2xl">Direct</p><p className="text-muted text-xs mt-1">you two, no middleman</p></div>
+        <div><p className="font-display text-2xl">$0</p><p className="text-muted text-xs mt-1">until your first match</p></div>
       </div>
     </div>
   );

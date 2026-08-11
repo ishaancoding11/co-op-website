@@ -6,15 +6,15 @@ import { Pager, SearchBar } from '../admin-ui';
 
 type Row = {
   user_id: string; display_name: string; kind: 'creative' | 'business';
-  plan: SubscriptionPlan | null; trial_ends_at: string | null;
-  subscription_status: 'active' | 'past_due' | 'cancelled' | 'expired' | null;
+  plan: SubscriptionPlan | null; pending_since: string | null;
+  subscription_status: 'active' | 'pending' | 'past_due' | 'cancelled' | 'expired' | null;
   current_period_end: string | null;
 };
 
 function statusFor(r: Row): { label: string; tone: 'sea' | 'accent' | 'neutral' } {
   if (r.plan && r.subscription_status === 'active') return { label: PLAN_LABELS[r.plan], tone: 'sea' };
-  if (r.trial_ends_at && new Date(r.trial_ends_at) > new Date()) return { label: 'Trial', tone: 'accent' };
-  return { label: 'Expired / no plan', tone: 'neutral' };
+  if (r.plan && r.subscription_status === 'pending') return { label: 'Pending — unbilled', tone: 'accent' };
+  return { label: 'No plan on file', tone: 'neutral' };
 }
 
 export default async function AdminBilling({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
@@ -43,7 +43,7 @@ export default async function AdminBilling({ searchParams }: { searchParams: Pro
             <div key={`${r.kind}-${r.user_id}`} className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">{r.display_name}</p>
-                <p className="text-xs text-muted capitalize">{r.kind}{r.trial_ends_at ? ` · trial ends ${new Date(r.trial_ends_at).toLocaleDateString('en-US')}` : ''}</p>
+                <p className="text-xs text-muted capitalize">{r.kind}{r.pending_since ? ` · pending since ${new Date(r.pending_since).toLocaleDateString('en-US')}` : ''}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Tag tone={s.tone}>{s.label}</Tag>

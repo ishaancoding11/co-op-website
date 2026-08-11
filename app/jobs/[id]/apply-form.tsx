@@ -47,7 +47,7 @@ export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; bus
         <textarea name="pitch" rows={2} className={inputCls} placeholder="Anything worth adding — availability, a relevant idea…" />
       </label>
 
-      {state?.quotaExceeded ? (
+      {state?.quotaExceeded || state?.needsPlanSetup ? (
         <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">
           {state.error} <Link href="/billing" className="underline underline-offset-2 font-medium">Go to Billing</Link>
         </p>

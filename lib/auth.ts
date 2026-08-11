@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
+import { activateFirstMatchBillingIfNeeded } from './billing-activation';
 import type { BusinessProfile, CreativeProfile } from './types';
 
 export async function getSession() {
@@ -31,6 +32,12 @@ export async function getViewer(): Promise<Viewer & { supabase: Awaited<ReturnTy
   else if (creative) activeRole = 'creative';
   else if (business) activeRole = 'business';
   else if (pref === 'creative' || pref === 'business') activeRole = pref; // mid-onboarding
+
+  // Opportunistic outbox drain for "bill from first match" — see
+  // lib/billing-activation.ts. Cheap when there's nothing to do (the common
+  // case), and only relevant once someone actually has a profile.
+  if (creative || business) await activateFirstMatchBillingIfNeeded(supabase, user.id);
+
   return { userId: user.id, creative, business, activeRole, supabase };
 }
 

@@ -66,7 +66,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {(c.categories ?? []).map(cat => <Tag key={cat} tone="accent">{CATEGORY_LABELS[cat]}</Tag>)}
-                  <Tag tone="sea">{c.plan ? PLAN_LABELS[c.plan] : 'Trial / expired'}</Tag>
+                  <Tag tone="sea">{c.plan ? PLAN_LABELS[c.plan] : 'No active plan'}</Tag>
                 </div>
                 <div className="mt-3"><Rating value={c.rating_avg} count={c.rating_count || undefined} /></div>
                 {isAdmin && <StatusForm userId={c.user_id} status={c.status} target={c.display_name} kind={kind} q={q} page={page} />}
@@ -88,7 +88,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mt-3">
                   <Metric label="Jobs published" value={String(b.jobs_published)} />
-                  <Metric label="Plan" value={b.plan ? PLAN_LABELS[b.plan] : 'Trial / expired'} />
+                  <Metric label="Plan" value={b.plan ? PLAN_LABELS[b.plan] : 'No active plan'} />
                 </div>
                 {isAdmin && <StatusForm userId={b.user_id} status={b.status} target={b.business_name} kind={kind} q={q} page={page} />}
                 {isAdmin && <DeleteBanForm userId={b.user_id} target={b.business_name} kind={kind} q={q} page={page} />}

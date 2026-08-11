@@ -46,6 +46,25 @@ async function existingCustomerId(supabase: Awaited<ReturnType<typeof db>>['supa
   return data?.stripe_customer_id ?? null;
 }
 
+/**
+ * "Subscribe now, don't pay until your first match": a user gets the long
+ * placeholder trial exactly once, the first time they ever subscribe — not
+ * on every checkout. Someone who has already matched (whether they're an
+ * active paying subscriber switching plans, or a pre-migration account with
+ * no subscription at all hitting the needs_plan_setup gate) has already
+ * passed that point and bills immediately instead.
+ */
+async function eligibleForFirstMatchTrial(supabase: Awaited<ReturnType<typeof db>>['supabase'], userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('matches')
+    .select('id')
+    .or(`business_id.eq.${userId},creative_id.eq.${userId}`)
+    .eq('is_matched', true)
+    .limit(1)
+    .maybeSingle();
+  return !data;
+}
+
 export async function startSubscriptionCheckout(prev: unknown, formData: FormData): Promise<{ error?: string }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login');
@@ -68,13 +87,23 @@ export async function startSubscriptionCheckout(prev: unknown, formData: FormDat
 
   const customer = await existingCustomerId(supabase, user.id);
   const origin = siteOrigin();
+  const trialEligible = await eligibleForFirstMatchTrial(supabase, user.id);
 
   const session = await stripe().checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price, quantity: 1 }],
     ...(customer ? { customer } : { customer_email: user.email ?? undefined }),
     client_reference_id: user.id,
-    subscription_data: { metadata: { user_id: user.id } },
+    subscription_data: {
+      metadata: { user_id: user.id },
+      // Ended early by lib/billing-activation.ts the moment this user gets
+      // their first match — see 0020_pay_on_first_match.sql. A long
+      // placeholder, not the actual intended trial length: Stripe trials are
+      // day-based, there's no "trial until an event" primitive, so this is
+      // just long enough that it never expires on its own before the event
+      // fires (or ever, for someone who never matches).
+      ...(trialEligible ? { trial_period_days: 365 } : {}),
+    },
     success_url: `${origin}/billing?checkout=done`,
     cancel_url: `${origin}/billing`,
     allow_promotion_codes: true,

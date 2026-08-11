@@ -28,5 +28,3 @@ export const PLAN_PRICING: Record<SubscriptionPlan, {
     features: ['Up to 15 active job posts at a time', 'Priority placement in the job feed', 'Unlimited applicant browsing & messaging'],
   },
 };
-
-export const TRIAL_DAYS = 30;

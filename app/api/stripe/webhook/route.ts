@@ -19,11 +19,15 @@ import { createServiceClient } from '@/utils/supabase/service';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function subscriptionStatus(status: Stripe.Subscription.Status): 'active' | 'past_due' | 'cancelled' | 'expired' | null {
+function subscriptionStatus(status: Stripe.Subscription.Status): 'active' | 'pending' | 'past_due' | 'cancelled' | 'expired' | null {
   switch (status) {
     case 'active':
-    case 'trialing':
       return 'active';
+    // The placeholder pre-first-match trial — $0, unbilled. Ended early by
+    // lib/billing-activation.ts calling trial_end='now', which flips this
+    // event's status back to 'active' on the next delivery.
+    case 'trialing':
+      return 'pending';
     case 'past_due':
     case 'unpaid':
       return 'past_due';

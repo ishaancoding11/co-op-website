@@ -90,7 +90,7 @@ export async function saveCreativeProfile(formData: FormData) {
     await supabase.from('musician_details').upsert({ creative_id: user.id, venues, audio_links: audio, video_links: video });
   }
   await setRole('creative');
-  redirect('/jobs');
+  redirect('/onboarding/creative/plan');
 }
 
 export async function saveBusinessProfile(formData: FormData) {
@@ -135,8 +135,7 @@ export async function saveBusinessProfile(formData: FormData) {
   }
   if (error) throw new Error(error.message);
   await setRole('business');
-  const { data: current } = await supabase.from('business_profiles').select('is_verified').eq('user_id', user.id).maybeSingle();
-  redirect(current?.is_verified ? `/business/${user.id}` : '/onboarding/business/verify');
+  redirect('/onboarding/business/plan');
 }
 
 export async function startVerification(prev: unknown, formData: FormData): Promise<{ error?: string; sent?: boolean }> {
@@ -162,7 +161,12 @@ export async function startVerification(prev: unknown, formData: FormData): Prom
 }
 
 // ===== Jobs =====
-export async function postJob(prev: unknown, formData: FormData): Promise<{ error?: string }> {
+// Shown when a pre-migration account (no Stripe subscription at all — see
+// needs_plan_setup() in 0020_pay_on_first_match.sql) has already matched at
+// least once and is now trying to take another quota-gated action.
+const NEEDS_PLAN_SETUP_MESSAGE = 'You’ve made your first match — add a plan and payment method to keep going.';
+
+export async function postJob(prev: unknown, formData: FormData): Promise<{ error?: string; needsPlanSetup?: boolean }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=business');
   const { data: job, error } = await supabase.from('jobs').insert({
@@ -177,6 +181,7 @@ export async function postJob(prev: unknown, formData: FormData): Promise<{ erro
   }).select('id').single();
   if (error) {
     if (error.code === '42501') return { error: 'Your business must be verified before posting jobs.' };
+    if (error.message.includes('NEEDS_PLAN_SETUP')) return { error: NEEDS_PLAN_SETUP_MESSAGE, needsPlanSetup: true };
     if (error.message.includes('BUSINESS_QUOTA_EXCEEDED')) {
       return { error: 'You’ve reached your job-post limit. Subscribe or free up a slot to post more.' };
     }
@@ -231,10 +236,10 @@ export async function businessAct(creativeId: string, action: 'liked' | 'passed'
 }
 
 // Creative swipes a job right (apply) or left (pass), or likes a business directly
-const QUOTA_TRIAL_MESSAGE = 'You’ve used your free trial application — subscribe to keep applying.';
 const QUOTA_MONTHLY_MESSAGE = 'You’ve reached your monthly application limit — upgrade to Premium for unlimited applications.';
+const QUOTA_LAPSED_MESSAGE = 'Your subscription isn’t active — subscribe to keep applying.';
 
-export async function applyToJob(prev: unknown, formData: FormData): Promise<{ error?: string; ok?: boolean; quotaExceeded?: boolean }> {
+export async function applyToJob(prev: unknown, formData: FormData): Promise<{ error?: string; ok?: boolean; quotaExceeded?: boolean; needsPlanSetup?: boolean }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=creative');
   const jobId = formData.get('job_id') as string;
@@ -242,14 +247,17 @@ export async function applyToJob(prev: unknown, formData: FormData): Promise<{ e
   const pitch = (formData.get('pitch') as string) || null; // optional short note
   const portfolioIds = formData.getAll('portfolio_ids') as string[];
 
-  // Checked before attempting the write so the message is specific (trial
-  // vs monthly cap) instead of generic — matches_application_quota_guard
-  // is still the real enforcement and would reject this regardless if this
-  // pre-check were ever bypassed or raced.
+  // Checked before attempting the write so the message is specific (monthly
+  // cap vs. lapsed plan vs. needs-plan-setup) instead of generic —
+  // matches_application_quota_guard is still the real enforcement and would
+  // reject this regardless if this pre-check were ever bypassed or raced.
   const { data: quota } = (await supabase.rpc('my_creative_quota').maybeSingle()) as
-    { data: { plan: string | null; can_apply: boolean } | null };
+    { data: { pending: boolean; needs_plan_setup: boolean; plan: string | null; can_apply: boolean } | null };
+  if (quota?.needs_plan_setup) {
+    return { error: NEEDS_PLAN_SETUP_MESSAGE, needsPlanSetup: true };
+  }
   if (quota && !quota.can_apply) {
-    return { error: quota.plan ? QUOTA_MONTHLY_MESSAGE : QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+    return { error: quota.plan ? QUOTA_MONTHLY_MESSAGE : QUOTA_LAPSED_MESSAGE, quotaExceeded: true };
   }
 
   const existing = await findPairMatch(supabase, businessId, user.id, jobId);
@@ -259,7 +267,8 @@ export async function applyToJob(prev: unknown, formData: FormData): Promise<{ e
       pitch_portfolio_ids: portfolioIds.length ? portfolioIds : existing.pitch_portfolio_ids,
     }).eq('id', existing.id);
     if (error) {
-      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+      if (error.message.includes('NEEDS_PLAN_SETUP')) return { error: NEEDS_PLAN_SETUP_MESSAGE, needsPlanSetup: true };
+      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_MONTHLY_MESSAGE, quotaExceeded: true };
       if (error.message.includes('ACCOUNT_SUSPENDED')) return { error: 'Your account is suspended and can’t apply to new jobs.' };
       return { error: friendlyDbError('applyToJob update', error) };
     }
@@ -270,7 +279,8 @@ export async function applyToJob(prev: unknown, formData: FormData): Promise<{ e
       creative_action: 'liked', application_status: 'applied',
     });
     if (error) {
-      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_TRIAL_MESSAGE, quotaExceeded: true };
+      if (error.message.includes('NEEDS_PLAN_SETUP')) return { error: NEEDS_PLAN_SETUP_MESSAGE, needsPlanSetup: true };
+      if (error.message.includes('CREATIVE_APPLICATION_QUOTA_EXCEEDED')) return { error: QUOTA_MONTHLY_MESSAGE, quotaExceeded: true };
       if (error.message.includes('ACCOUNT_SUSPENDED')) return { error: 'Your account is suspended and can’t apply to new jobs.' };
       return { error: friendlyDbError('applyToJob insert', error) };
     }
@@ -338,7 +348,7 @@ export async function sendMessage(matchId: string, body: string) {
 }
 
 // ===== Agreements =====
-export async function createAgreement(prev: unknown, formData: FormData): Promise<{ error?: string }> {
+export async function createAgreement(prev: unknown, formData: FormData): Promise<{ error?: string; needsPlanSetup?: boolean }> {
   const { supabase, user } = await db();
   if (!user) redirect('/login');
   const matchId = formData.get('match_id') as string;
@@ -351,6 +361,9 @@ export async function createAgreement(prev: unknown, formData: FormData): Promis
     agreed_price: formData.get('agreed_price') ? Number(formData.get('agreed_price')) : null,
   }).select('id').single();
   if (error) {
+    if (error.message.includes('NEEDS_PLAN_SETUP')) {
+      return { error: NEEDS_PLAN_SETUP_MESSAGE, needsPlanSetup: true };
+    }
     if (error.message.includes('CREATIVE_QUOTA_EXCEEDED')) {
       return { error: 'You’ve reached your monthly limit for accepted jobs. Subscribe to take on more.' };
     }

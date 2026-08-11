@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { postJob } from '@/lib/actions';
 import { Field, inputCls } from '@/components/ui';
 import { Dropdown, LocationSelect } from '@/components/dropdown';
@@ -27,7 +28,11 @@ export function JobForm({ defaultLocation }: { defaultLocation: string | null })
         <Field label="Budget to ($)"><input type="number" min={0} name="budget_max" className={inputCls} /></Field>
         <Field label="Deadline"><input type="date" name="deadline" className={inputCls} /></Field>
       </div>
-      {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
+      {state?.needsPlanSetup ? (
+        <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">
+          {state.error} <Link href="/billing" className="underline underline-offset-2 font-medium">Go to Billing</Link>
+        </p>
+      ) : state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
       <button disabled={pending} className="w-full rounded-full bg-accent text-white py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
         {pending ? 'Posting…' : 'Post job'}
       </button>

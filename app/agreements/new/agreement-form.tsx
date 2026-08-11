@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { createAgreement } from '@/lib/actions';
 import { Field, inputCls } from '@/components/ui';
 import { Dropdown } from '@/components/dropdown';
@@ -25,7 +26,11 @@ export function AgreementForm({ matchId, jobTitle, packages }: { matchId: string
       <Field label="Agreed price ($)" hint="Paid directly between you two — Co-op never takes a cut.">
         <input type="number" min={0} name="agreed_price" className={inputCls} />
       </Field>
-      {state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
+      {state?.needsPlanSetup ? (
+        <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">
+          {state.error} <Link href="/billing" className="underline underline-offset-2 font-medium">Go to Billing</Link>
+        </p>
+      ) : state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
       <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
         {pending ? 'Creating…' : 'Send agreement'}
       </button>
