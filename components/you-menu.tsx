@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Avatar } from './ui';
 import { signOut } from '@/lib/actions';
 import { setLocale } from '@/lib/i18n-actions';
@@ -26,15 +26,10 @@ export function YouMenu({
   variant: 'desktop' | 'mobile';
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-
-  // Close on route change — Link navigations in the menu land here and
-  // dismiss the panel without racing the Link's own click handler.
-  useEffect(() => { setOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +88,7 @@ export function YouMenu({
             <p className="font-semibold text-sm truncate">{displayName}</p>
           </div>
           {items.map(it => (
-            <Link key={it.href} href={it.href} role="menuitem"
+            <Link key={it.href} href={it.href} role="menuitem" onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground hover:bg-sea-soft transition-colors">
               {it.icon && <span className="text-muted shrink-0">{it.icon}</span>}
               <span className="truncate">{it.label}</span>
