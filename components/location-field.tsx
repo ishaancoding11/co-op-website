@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CITY_COORDS, LOCATION_GROUPS } from '@/lib/types';
 import { IconPin } from './ui';
 import { Dropdown } from './dropdown';
@@ -13,9 +13,19 @@ type GeoState = 'idle' | 'asking' | 'granted' | 'denied';
  * lat/lng as a soft signal. Denied/unavailable → manual entry, unchanged.
  */
 export function LocationField({ name = 'neighborhood', initial }: { name?: string; initial?: string | null }) {
-  const [value, setValue] = useState(initial ?? 'Newport Beach');
+  const [value, setValue] = useState(initial ?? '');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geo, setGeo] = useState<GeoState>('idle');
+  const [error, setError] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const form = rootRef.current?.closest('form');
+    if (!form) return;
+    const onSubmit = (e: SubmitEvent) => { if (!value) { e.preventDefault(); setError(true); } };
+    form.addEventListener('submit', onSubmit);
+    return () => form.removeEventListener('submit', onSubmit);
+  }, [value]);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) { setGeo('denied'); return; }
@@ -39,15 +49,16 @@ export function LocationField({ name = 'neighborhood', initial }: { name?: strin
   };
 
   return (
-    <div className="space-y-2">
+    <div ref={rootRef} className="space-y-2">
       <div className="flex gap-2">
-        <Dropdown name={name} value={value} onChange={setValue} ariaLabel="City" className="flex-1"
+        <Dropdown name={name} value={value} onChange={v => { setValue(v); setError(false); }} ariaLabel="City" className="flex-1" placeholder="Select your city"
           groups={Object.entries(LOCATION_GROUPS).map(([region, cities]) => ({ label: region, options: cities.map(c => ({ value: c, label: c })) }))} />
         <button type="button" onClick={useMyLocation} disabled={geo === 'asking'}
           className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-line bg-card px-3.5 text-sm font-medium text-muted hover:text-foreground hover:border-accent/50 disabled:opacity-50">
           <IconPin /> {geo === 'asking' ? 'Locating…' : 'Use my location'}
         </button>
       </div>
+      {error && <p role="alert" className="text-xs text-red-600">Select your city.</p>}
       {geo === 'granted' && <p className="text-xs text-sea">Snapped to the closest city — adjust if it&rsquo;s not quite right.</p>}
       {geo === 'denied' && <p className="text-xs text-muted">No problem — pick your city manually.</p>}
       {coords && <input type="hidden" name="latitude" value={coords.lat} />}

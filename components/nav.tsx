@@ -67,7 +67,7 @@ export async function Nav() {
   const logo = (
     <Link href={logoHref} className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
       <img src="/coop-logo-full.png" alt="" width={34} height={34} />
-      Co<span className="text-accent">·</span>op
+      Co-op
     </Link>
   );
 
@@ -155,7 +155,7 @@ export async function Nav() {
                 className="inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-4 pr-5 py-2.5 text-sm font-semibold hover:opacity-85 shadow-sm mr-2 whitespace-nowrap">
                 <IconPlus /> {t('nav.postJob')}
               </Link>
-              <div className="hidden sm:block mr-1">{langSwitcher}</div>
+              <div className="mr-1">{langSwitcher}</div>
               <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
             </div>
           </div>
@@ -201,7 +201,7 @@ export async function Nav() {
                 </Link>
               ))}
             </nav>
-            <div className="hidden sm:block mr-1">{langSwitcher}</div>
+            <div className="mr-1">{langSwitcher}</div>
             <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
           </div>
         </div>

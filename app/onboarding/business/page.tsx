@@ -23,13 +23,13 @@ export default async function BusinessOnboarding() {
           </Field>
           <Field label="Business name"><input required name="business_name" className={inputCls} defaultValue={business?.business_name ?? ''} /></Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Type"><input name="category" className={inputCls} defaultValue={business?.category ?? ''} placeholder="Coffee shop, salon…" /></Field>
+            <Field label="Type"><input required name="category" className={inputCls} defaultValue={business?.category ?? ''} placeholder="Coffee shop, salon…" /></Field>
             <Field label="City">
               <LocationField initial={business?.neighborhood} />
             </Field>
           </div>
           <Field label="What kind of creative work do you usually need?" hint="In your own words — photos for a menu launch, reels, a mural, live music…">
-            <textarea name="needs_description" rows={3} className={inputCls}
+            <textarea required name="needs_description" rows={3} className={inputCls}
               defaultValue={business?.needs_description ?? ''}
               placeholder="e.g. We refresh our menu photos every season and want short reels for Instagram." />
           </Field>

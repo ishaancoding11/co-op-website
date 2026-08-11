@@ -58,12 +58,15 @@ export async function saveCreativeProfile(formData: FormData) {
   const { supabase, user } = await db();
   if (!user) redirect('/login?role=creative');
   const categories = formData.getAll('categories') as CreativeCategory[];
+  if (!categories.length) throw new Error('Pick at least one category.');
+  const neighborhood = (formData.get('neighborhood') as string)?.trim();
+  if (!neighborhood) throw new Error('Select your city.');
   const avatarUrl = await uploadProfilePhoto(supabase, user.id, formData.get('avatar') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
     ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     bio: (formData.get('bio') as string) || null,
-    neighborhood: (formData.get('neighborhood') as string) || null,
+    neighborhood,
     categories,
     rate_min: formData.get('rate_min') ? Number(formData.get('rate_min')) : null,
     rate_max: formData.get('rate_max') ? Number(formData.get('rate_max')) : null,
@@ -101,15 +104,23 @@ export async function saveBusinessProfile(formData: FormData) {
   // wrong-format entry is rejected here rather than silently stored.
   const reg = validateRegistrationNumber(formData.get('registration_number') as string);
   if (reg.error) throw new Error(reg.error);
+  const businessName = (formData.get('business_name') as string)?.trim();
+  if (!businessName) throw new Error('Business name is required.');
+  const category = (formData.get('category') as string)?.trim();
+  if (!category) throw new Error('Business type is required.');
+  const neighborhood = (formData.get('neighborhood') as string)?.trim();
+  if (!neighborhood) throw new Error('Select your city.');
+  const needsDescription = (formData.get('needs_description') as string)?.trim();
+  if (!needsDescription) throw new Error('Tell us what kind of creative work you need.');
   const logoUrl = await uploadProfilePhoto(supabase, user.id, formData.get('logo') as File | null);
   const row: Record<string, unknown> = {
     user_id: user.id,
     ...(logoUrl ? { logo_url: logoUrl } : {}),
-    business_name: (formData.get('business_name') as string) || 'My business',
-    category: (formData.get('category') as string) || null,
-    neighborhood: (formData.get('neighborhood') as string) || null,
+    business_name: businessName,
+    category,
+    neighborhood,
     registration_number: reg.value,
-    needs_description: (formData.get('needs_description') as string) || null,
+    needs_description: needsDescription,
     budget_min: budgetMin, budget_max: budgetMax, budget_band: budgetBand,
     latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
     longitude: formData.get('longitude') ? Number(formData.get('longitude')) : null,
