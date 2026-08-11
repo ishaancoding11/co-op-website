@@ -1,44 +1,83 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fefbf8;   /* just barely warm — not the old cream/sand */
-  --foreground: #231f1d;   /* charcoal */
-  --muted: #7a7370;
-  --card: #ffffff;         /* pure white — pops slightly against the page */
-  --line: #e8e5e2;
-  --accent: #db6239;       /* sampled from the logo mark */
-  --accent-soft: #faece7;
-  --sea: #4f8577;          /* kept, muted: functional status signals only —
-                               ratings, verified/positive states, success —
-                               not decorative, so not part of the orange sweep */
-  --sea-soft: #e4efec;
-  --gold: #d9a441;
+  --background: #fbf8f3;   /* warm paper — matches the logo's off-white */
+  --surface-2: #f3ede3;    /* recessed sand, for wells & alt rows */
+  --foreground: #1f1b16;   /* deep ink */
+  --muted: #7d7367;
+  --card: #ffffff;         /* clean white cards, like the references */
+  --line: #ece4d7;
+  --line-strong: #d8ccb8;  /* for dividers that need to read */
+  --accent: #ec5729;       /* Co-op orange — sampled straight from the logo */
+  --accent-deep: #cd4319;  /* pressed / hover */
+  --accent-soft: #fce2d6;
+  --sea: #4a7a72;          /* eucalyptus, used sparingly as a secondary */
+  --sea-soft: #e2efeb;
+  --gold: #cf9a34;
+  --gold-soft: #f6eccf;
+
+  /* Elevation — warm-tinted shadows, never pure black */
+  --shadow-sm: 0 1px 2px rgba(58, 48, 38, 0.05), 0 1px 3px rgba(58, 48, 38, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(58, 48, 38, 0.08), 0 2px 6px -2px rgba(58, 48, 38, 0.06);
+  --shadow-lg: 0 18px 40px -12px rgba(58, 48, 38, 0.16), 0 6px 16px -8px rgba(58, 48, 38, 0.10);
+
+  /* Motion — strong custom curves (built-in CSS easings are too weak).
+     Per Emil Kowalski: ease-out for enter/exit, never ease-in on UI. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-card: var(--card);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
   --color-accent-soft: var(--accent-soft);
   --color-sea: var(--sea);
   --color-sea-soft: var(--sea-soft);
   --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);
+  --shadow-soft: var(--shadow-md);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Barely-there paper grain over the whole page. Editorial warmth without
+   noise you'd consciously notice — it just makes flat fills feel like stock. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+body > * { position: relative; z-index: 1; }
 
 h1, h2, .font-display {
   font-family: var(--font-display), Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.018em;
+  font-weight: 560;
 }
+
+/* Fraunces italics are genuinely beautiful — let emphasis lean into them. */
+.font-display em, h1 em, h2 em { font-style: italic; }
 
 *:focus-visible {
   outline: 2px solid var(--accent);
@@ -46,4 +85,70 @@ h1, h2, .font-display {
   border-radius: 4px;
 }
 
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent-soft); color: var(--accent-deep); }
+
+/* Thin, warm scrollbar — tinted to the paper, never system-grey. The 3px
+   "border" is the page background, so the thumb reads as a slim pill. */
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 3px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Utility: hairline top-rule used on editorial section headers. */
+.rule-accent::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  margin-bottom: 0.9rem;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise 0.6s var(--ease-out) both; }
+
+/* Pressable feedback — subtle scale so the UI feels like it's listening.
+   Only transform (GPU), never `all`. */
+.press { transition: transform 160ms var(--ease-out); }
+.press:active { transform: scale(0.97); }
+
+/* Staggered list entrance — short delays (Emil: 30–80ms between items). */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stagger > * { opacity: 0; animation: fade-up 0.45s var(--ease-out) forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
+.stagger > *:nth-child(5) { animation-delay: 180ms; }
+.stagger > *:nth-child(6) { animation-delay: 225ms; }
+
+/* Popover / menu entrance — scales up from the trigger, never from nothing
+   (Emil: start at 0.96 + opacity, ease-out, <200ms). Pair with an
+   origin-* utility on the element so it grows from the right anchor. */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop { animation: pop-in 0.15s var(--ease-out); }
+
+/* Deliberately gentle loader — breathes with opacity instead of the harsh
+   grey flash of a default skeleton. Pairs with warm --line fills. */
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.animate-pulse-soft { animation: pulse-soft 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise, .stagger > *, .animate-pop, .animate-pulse-soft { animation: none; opacity: 1; }
+  .press:active { transform: none; }
+}
