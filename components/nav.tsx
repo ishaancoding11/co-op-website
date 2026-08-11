@@ -1,90 +1,75 @@
 import Link from 'next/link';
 import { getStaffRole, getViewer } from '@/lib/auth';
-import { Avatar, IconBell, IconPlus } from './ui';
+import { Avatar, IconBell, IconGear, IconHeart, IconPlus, IconSearch } from './ui';
+import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 import { SignupGate } from './signup-gate';
-import { BottomNav, type BottomTab } from './bottom-nav';
-import { YouMenu, type YouMenuItem } from './you-menu';
 import { GetStartedButton } from './get-started-button';
 import { ModerationListener } from './moderation-listener';
 import { getT } from '@/lib/i18n-server';
 import { LanguageSwitcher } from './language-switcher';
 
-// Shared visual tokens for the 4 primary tab links so the desktop top bar and
-// the mobile bottom bar stay in sync. `active` uses the accent chip; idle is
-// muted with a subtle hover raise.
-const tabIconProps = {
-  width: 22, height: 22, viewBox: '0 0 24 24',
-  fill: 'none', stroke: 'currentColor',
-  strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
-};
+const iconBtnCls = 'rounded-full h-10 w-10 flex items-center justify-center text-muted hover:text-foreground hover:bg-line/50 transition-colors';
 
-const IconHome = (
-  <svg {...tabIconProps} aria-hidden>
-    <path d="M3.5 11.2 12 4l8.5 7.2V20a1 1 0 0 1-1 1h-4.5v-6.2h-6V21H4.5a1 1 0 0 1-1-1v-8.8Z" />
-  </svg>
-);
-const IconCompass = (
-  <svg {...tabIconProps} aria-hidden>
-    <circle cx="12" cy="12" r="9" />
-    <path d="m15.7 8.3-2.2 5.4-5.4 2.2 2.2-5.4 5.4-2.2Z" />
-  </svg>
-);
-const IconChat = (
-  <svg {...tabIconProps} aria-hidden>
-    <path d="M4 6a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4A2.5 2.5 0 0 1 2.5 14V6Z" transform="translate(1.5 0.5)" />
-  </svg>
-);
-
-// Small square icons used inside the YouMenu list items.
-const menuIcon = {
-  width: 16, height: 16, viewBox: '0 0 24 24',
-  fill: 'none', stroke: 'currentColor',
-  strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
-};
-const IconUser = <svg {...menuIcon} aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
-const IconGrid = <svg {...menuIcon} aria-hidden><rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="8" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" /><rect x="13" y="13" width="8" height="8" rx="1.5" /></svg>;
-const IconBriefcase = <svg {...menuIcon} aria-hidden><rect x="3" y="7" width="18" height="13" rx="2.5" /><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7" /></svg>;
-const IconHeartSm = <svg {...menuIcon} aria-hidden><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z" /></svg>;
-const IconCard = <svg {...menuIcon} aria-hidden><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3 10h18" /></svg>;
-const IconGearSm = <svg {...menuIcon} aria-hidden><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" /></svg>;
-
-const iconBtnCls = 'relative rounded-full h-10 w-10 flex items-center justify-center text-muted hover:text-foreground hover:bg-line/50 transition-colors';
-
-function NotifBell({ href, unread, label }: { href: string; unread: number; label: string }) {
-  return (
-    <Link href={href} aria-label={unread ? `${label}, ${unread} unread` : label} className={iconBtnCls}>
-      <IconBell />
-      {unread > 0 && (
-        <span className="absolute top-1 right-1 bg-accent text-white text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
-          {unread > 9 ? '9+' : unread}
-        </span>
-      )}
-    </Link>
-  );
-}
-
-function DesktopTabLink({ href, label, icon, badge }: {
-  href: string; label: string; icon: React.ReactNode; badge?: number;
+function UtilityIcons({ unread, profileHref, displayName, avatarUrl }: {
+  unread: number; profileHref: string; displayName: string; avatarUrl: string | null | undefined;
 }) {
   return (
-    <Link href={href}
-      className="hidden lg:inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 transition-colors">
-      <span className="relative">
-        {icon}
-        {badge && badge > 0 ? (
-          <span className="absolute -top-1 -right-1.5 bg-accent text-white text-[9px] leading-none font-bold rounded-full min-w-[14px] h-[14px] px-1 grid place-items-center">
-            {badge > 9 ? '9+' : badge}
-          </span>
-        ) : null}
-      </span>
-      {label}
-    </Link>
+    <>
+      <Link href="/favorites" aria-label="Saved" className={iconBtnCls}><IconHeart /></Link>
+      <Link href="/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} className={`relative ${iconBtnCls}`}>
+        <IconBell />
+        {unread > 0 && <span className="absolute top-1 right-1 bg-accent text-white text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}
+      </Link>
+      <Link href="/settings" aria-label="Settings" className={iconBtnCls}><IconGear /></Link>
+      <Link href={profileHref} aria-label="My profile" className="ml-1.5 rounded-full ring-2 ring-line hover:ring-accent transition-shadow shrink-0">
+        <Avatar name={displayName} url={avatarUrl} size={34} />
+      </Link>
+    </>
   );
 }
 
 export async function Nav() {
   const { userId, activeRole, creative, business, supabase } = await getViewer();
   const { locale, t } = await getT();
+  const langSwitcher = <LanguageSwitcher current={locale} label={t('nav.language')} />;
+  let unread = 0;
+  let displayName = 'Me';
+  let isSuspended = false;
+  let suspendReason: string | null = null;
+  if (userId) {
+    const [{ count }, { data: u }] = await Promise.all([
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false),
+      supabase.from('users').select('display_name, status').eq('id', userId).maybeSingle(),
+    ]);
+    unread = count ?? 0;
+    displayName = (activeRole === 'business' ? business?.business_name : u?.display_name) ?? u?.display_name ?? 'Me';
+    // Suspended (not deleted) accounts keep read access and their session —
+    // only the realtime popup fires when it happens live (ModerationListener);
+    // this is what shows the reason on every later visit, since a cold page
+    // load has no live event to react to.
+    isSuspended = u?.status === 'suspended';
+    if (isSuspended) {
+      const { data: latest } = await supabase.from('account_actions').select('reason')
+        .eq('user_id', userId).eq('action', 'suspended').order('created_at', { ascending: false }).limit(1).maybeSingle();
+      suspendReason = latest?.reason ?? null;
+    }
+  }
+
+  const suspendedBanner = isSuspended ? (
+    <div className="bg-accent-soft text-accent text-sm px-4 py-2.5 text-center">
+      Your account is suspended.{suspendReason ? ` ${suspendReason}` : ''}{' '}
+      <Link href="/support" className="underline underline-offset-2 font-medium">Contact support</Link> if you think this is a mistake.
+    </div>
+  ) : null;
+
+  // Logo routes to the role's home surface (business → browse creatives, creative → job feed)
+  const logoHref = activeRole === 'business' ? '/browse' : activeRole === 'creative' ? '/jobs' : '/';
+  const logo = (
+    <Link href={logoHref} className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
+      <img src="/coop-logo-full.png" alt="" width={34} height={34} />
+      Co-op
+    </Link>
+  );
 
   // ===== Signed out =====
   if (!userId) {
@@ -93,14 +78,11 @@ export async function Nav() {
         <SignupGate />
         <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
-              <img src="/coop-logo.png" alt="" width={34} height={34} />
-              Co-op
-            </Link>
+            {logo}
             <nav className="flex items-center gap-2">
               <Link href="/browse" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.browseCreatives')}</Link>
               <Link href="/jobs" className="hidden md:block rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.browseJobs')}</Link>
-              <LanguageSwitcher current={locale} label={t('nav.language')} />
+              {langSwitcher}
               <Link href="/login?mode=login" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">{t('nav.login')}</Link>
               <GetStartedButton />
             </nav>
@@ -110,28 +92,11 @@ export async function Nav() {
     );
   }
 
-  // ===== Suspension banner (kept from main — shows account status on cold loads)
-  // Suspended accounts keep read access; the realtime popup only fires when the
-  // event happens live. This banner covers every later visit.
-  const { data: u0 } = await supabase.from('users').select('display_name, status').eq('id', userId).maybeSingle();
-  const isSuspended = u0?.status === 'suspended';
-  let suspendReason: string | null = null;
-  if (isSuspended) {
-    const { data: latest } = await supabase.from('account_actions').select('reason')
-      .eq('user_id', userId).eq('action', 'suspended').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    suspendReason = latest?.reason ?? null;
-  }
-  const suspendedBanner = isSuspended ? (
-    <div className="bg-accent-soft text-accent text-sm px-4 py-2.5 text-center">
-      Your account is suspended.{suspendReason ? ` ${suspendReason}` : ''}{' '}
-      <Link href="/support" className="underline underline-offset-2 font-medium">Contact support</Link> if you think this is a mistake.
-    </div>
-  ) : null;
-
-  // ===== Signed-in staff account without a creative/business profile =====
-  // Staff never get a coop_role cookie (they skip onboarding entirely), so
-  // activeRole is null even though the visitor is authenticated. Give them a
-  // minimal shell with a staff link, no SignupGate.
+  // ===== Signed in, no business/creative profile =====
+  // Staff-only accounts never get a coop_role cookie (they skip onboarding
+  // entirely — see auth/callback/route.ts), so activeRole is null here even
+  // though the visitor is authenticated. They must never see the anonymous
+  // marketing shell or the SignupGate popup.
   if (!activeRole) {
     const { staffRole } = await getStaffRole();
     return (
@@ -139,12 +104,9 @@ export async function Nav() {
         <ModerationListener userId={userId} />
         <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
-              <img src="/coop-logo.png" alt="" width={34} height={34} />
-              Co-op
-            </Link>
+            {logo}
             <div className="flex items-center gap-2">
-              <LanguageSwitcher current={locale} label={t('nav.language')} />
+              {langSwitcher}
               {staffRole && (
                 <Link href="/admin" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted hover:text-foreground">Staff</Link>
               )}
@@ -155,106 +117,115 @@ export async function Nav() {
     );
   }
 
-  // ===== Signed in — unified 4-tab structure =====
-  // Two parallel unread counts fuel two live badges: the Messages tab and the
-  // bell icon.
-  const [{ count: notifUnread }, { count: msgUnread }] = await Promise.all([
-    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false),
-    supabase.from('messages').select('id', { count: 'exact', head: true }).is('read_at', null).neq('sender_id', userId),
-  ]);
-  const unread = notifUnread ?? 0;
-  const unreadMessages = msgUnread ?? 0;
-  const displayName =
-    (activeRole === 'business' ? business?.business_name : u0?.display_name) ?? u0?.display_name ?? 'Me';
-
-  // The profile link must not assume a row exists yet — activeRole comes from
-  // the cookie while creative/business rows may still be null mid-onboarding.
+  // The nav shell can show before onboarding finishes (activeRole comes from
+  // the coop_role cookie alone while creative/business is still null — see
+  // getViewer()), so the profile link must not assume a row exists yet: that
+  // was sending people straight to a 404 for their own avatar.
   const profileHref = activeRole === 'business'
     ? (business ? `/business/${userId}` : '/onboarding/business')
     : (creative ? `/creatives/${userId}` : '/onboarding/creative');
   const avatarUrl = activeRole === 'business' ? business?.logo_url : creative?.avatar_url;
 
-  // Role-specific routes wrapped into the same 4-tab shape.
-  const browseHref = activeRole === 'business' ? '/browse' : '/jobs';
-  const browseLabel = t('nav.browse');
-  const postHref = activeRole === 'business' ? '/jobs/new' : '/portfolio';
-  const postLabel = activeRole === 'business' ? t('nav.postJob') : t('portfolio.addPiece');
+  // ===== Business shell: hiring toolbar, no category strip =====
+  if (activeRole === 'business') {
+    const links = [
+      { href: '/browse', label: t('nav.browseCreatives') },
+      { href: '/discover', label: t('nav.discover') },
+      { href: '/jobs/mine', label: t('nav.myJobs') },
+      { href: '/matches', label: t('nav.matches') },
+      { href: '/dashboard', label: t('nav.bookings') },
+      { href: '/billing', label: t('nav.billing') },
+    ];
+    return (
+      <>
+        <ModerationListener userId={userId} />
+        {suspendedBanner}
+        <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-5">
+            {logo}
+            <nav aria-label="Primary" className="hidden lg:flex items-center gap-0.5">
+              {links.map(l => (
+                <Link key={l.href} href={l.href} className="rounded-full px-3.5 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex items-center gap-1 ml-auto">
+              <Link href="/jobs/new"
+                className="inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-4 pr-5 py-2.5 text-sm font-semibold hover:opacity-85 shadow-sm mr-2 whitespace-nowrap">
+                <IconPlus /> {t('nav.postJob')}
+              </Link>
+              <div className="mr-1">{langSwitcher}</div>
+              <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
+            </div>
+          </div>
+          {/* Mobile business toolbar */}
+          <nav aria-label="Primary mobile" className="lg:hidden border-t border-line/70">
+            <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {links.map(l => (
+                <Link key={l.href} href={l.href} className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">{l.label}</Link>
+              ))}
+            </div>
+          </nav>
+        </header>
+      </>
+    );
+  }
 
-  // Everything secondary lives inside the You menu so the top bar stays lean.
-  const youItems: YouMenuItem[] = [
-    { href: profileHref, label: t('nav.viewMyProfile'), icon: IconUser },
-    activeRole === 'creative'
-      ? { href: '/portfolio', label: t('nav.portfolio'), icon: IconGrid }
-      : { href: '/jobs/mine', label: t('nav.myJobsShort'), icon: IconBriefcase },
-    { href: '/dashboard', label: t('nav.bookings'), icon: IconBriefcase },
-    { href: '/favorites', label: t('nav.saved'), icon: IconHeartSm },
-    { href: '/billing', label: t('nav.billing'), icon: IconCard },
-    { href: '/settings', label: t('nav.settings'), icon: IconGearSm },
+  // ===== Creative shell: search + category discovery, bottom tabs on mobile =====
+  const creativeTabs = [
+    { href: '/jobs', label: t('nav.jobs') },
+    { href: '/matches', label: t('nav.matches') },
+    { href: '/dashboard', label: t('nav.bookings') },
+    { href: '/portfolio', label: t('nav.portfolio') },
   ];
-
-  const bottomTabs: BottomTab[] = [
-    { href: '/', label: t('nav.home'), icon: IconHome },
-    { href: browseHref, label: browseLabel, icon: IconCompass },
-    { href: '/matches', label: t('nav.messages'), icon: IconChat, badge: unreadMessages, matchPrefixes: ['/messages'] },
-  ];
-
   return (
     <>
       <ModerationListener userId={userId} />
       {suspendedBanner}
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 font-display text-xl tracking-tight shrink-0" aria-label="Co-op home">
-            <img src="/coop-logo.png" alt="" width={30} height={30} />
-            Co-op
-          </Link>
-
-          {/* Desktop-only primary tabs. On mobile these live in <BottomNav>. */}
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 ml-3">
-            <DesktopTabLink href="/" label={t('nav.home')} icon={IconHome} />
-            <DesktopTabLink href={browseHref} label={browseLabel} icon={IconCompass} />
-            <DesktopTabLink href="/matches" label={t('nav.messages')} icon={IconChat} badge={unreadMessages} />
-          </nav>
-
-          <div className="flex items-center gap-1 ml-auto">
-            <Link href={postHref}
-              className="press inline-flex items-center gap-1.5 rounded-full bg-accent text-white pl-3.5 pr-4 py-2 text-sm font-semibold shadow-[var(--shadow-sm)] hover:opacity-90 transition-opacity whitespace-nowrap"
-              aria-label={postLabel}>
-              <IconPlus />
-              <span className="hidden sm:inline">{postLabel}</span>
-            </Link>
-            <NotifBell href="/notifications" unread={unread} label={t('nav.notifications')} />
-            {/* Desktop shows the YouMenu at the top; mobile hides it here (it's
-                already rendered inside <BottomNav> below). */}
-            <div className="hidden lg:block">
-              <YouMenu
-                variant="desktop"
-                displayName={displayName}
-                avatarUrl={avatarUrl}
-                items={youItems}
-                locale={locale}
-                langLabel={t('nav.language')}
-                signOutLabel={t('nav.signOut')}
-              />
+        <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-4">
+          {logo}
+          <form action="/jobs" role="search" className="hidden sm:flex flex-1 max-w-md">
+            <div className="flex w-full rounded-full border border-line bg-card overflow-hidden focus-within:border-accent">
+              <input name="q" placeholder={t('nav.searchJobs')} aria-label={t('nav.searchJobs')}
+                className="flex-1 px-4 py-2 text-sm bg-transparent placeholder:text-muted/70 focus:outline-none" />
+              <button className="px-4 bg-foreground text-background hover:opacity-85 flex items-center" aria-label="Search"><IconSearch /></button>
             </div>
+          </form>
+          <div className="flex items-center gap-1 ml-auto">
+            <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 mr-2">
+              {[...creativeTabs, { href: '/billing', label: t('nav.billing') }].map(tab => (
+                <Link key={tab.href} href={tab.href} className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50">
+                  {tab.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="mr-1">{langSwitcher}</div>
+            <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
           </div>
         </div>
+        <nav aria-label="Job categories" className="border-t border-line/70">
+          <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Link href="/jobs" className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50">{t('nav.all')}</Link>
+            {ALL_CATEGORIES.map(c => (
+              <Link key={c} href={`/jobs?category=${c}`}
+                className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
+                {CATEGORY_LABELS[c]}
+              </Link>
+            ))}
+          </div>
+        </nav>
       </header>
-
-      <BottomNav
-        tabs={bottomTabs}
-        youSlot={
-          <YouMenu
-            variant="mobile"
-            displayName={displayName}
-            avatarUrl={avatarUrl}
-            items={youItems}
-            locale={locale}
-            langLabel={t('nav.language')}
-            signOutLabel={t('nav.signOut')}
-          />
-        }
-      />
+      <nav aria-label="Primary mobile" className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-line pb-[env(safe-area-inset-bottom)]">
+        <div className="flex justify-around">
+          {creativeTabs.map(t => (
+            <Link key={t.href} href={t.href} className="py-3 px-3 text-xs font-semibold text-muted hover:text-foreground">
+              {t.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
     </>
   );
 }

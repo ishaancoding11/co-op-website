@@ -14,25 +14,7 @@
     "getStarted": "Get started",
     "searchJobs": "Search jobs…",
     "all": "All",
-    "language": "Language",
-    "home": "Home",
-    "browse": "Browse",
-    "browseHint": "Find work",
-    "browseHintBiz": "Find creatives",
-    "messages": "Messages",
-    "you": "You",
-    "notifications": "Notifications",
-    "viewMyProfile": "View my profile",
-    "myJobsShort": "My jobs",
-    "saved": "Saved",
-    "settings": "Settings",
-    "signOut": "Sign out",
-    "post": "Post"
-  },
-  "portfolio": {
-    "addPiece": "Add a piece",
-    "emptyTitle": "No pieces yet",
-    "emptyBody": "Profiles with visuals get far more matches — start with your strongest work and keep adding."
+    "language": "Language"
   },
   "jobs": {
     "title": "Open jobs nearby",
