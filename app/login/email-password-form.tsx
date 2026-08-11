@@ -33,15 +33,7 @@ export function EmailPasswordForm({ role, next, initialMode = 'login' }: {
         const { data: isBanned } = await supabase.rpc('is_email_banned', { p_email: email });
         if (isBanned) { setBanned(true); return; }
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email, password,
-          options: {
-            emailRedirectTo:
-              typeof window !== 'undefined'
-                ? `${window.location.origin}/auth/callback`
-                : undefined,
-          },
-        });
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) { setError(signUpError.message); return; }
         if (!data.session) {
           // Email confirmation is required by this project's Auth settings.

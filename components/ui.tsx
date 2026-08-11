@@ -85,26 +85,14 @@ export function StatusBadge({ status }: { status: string }) {
   return <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${tones[status] ?? 'bg-line text-muted'}`}>{status.replace(/_/g, ' ')}</span>;
 }
 
-export function EmptyState({
-  icon, title, body, action, tone = 'sea',
-}: {
-  icon?: ReactNode; title: string; body?: string; action?: ReactNode;
-  tone?: 'sea' | 'accent' | 'gold';
-}) {
-  const chipTone = tone === 'accent' ? 'bg-accent-soft text-accent'
-    : tone === 'gold' ? 'bg-gold-soft text-gold'
-    : 'bg-sea-soft text-sea';
+export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
-    <div className="text-center py-14 px-6">
-      {icon ? (
-        <span aria-hidden className={`mx-auto grid place-items-center h-16 w-16 rounded-2xl mb-4 ${chipTone}`}>
-          {icon}
-        </span>
-      ) : (
-        <img src="/coop-logo.png" alt="" width={52} height={52} className="mx-auto mb-4" aria-hidden />
-      )}
-      <h2 className="font-display text-xl">{title}</h2>
-      {body && <p className="text-muted text-sm mt-1.5 max-w-sm mx-auto leading-relaxed">{body}</p>}
+    <div className="text-center py-16 px-6">
+      <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-accent-soft flex items-center justify-center" aria-hidden>
+        <img src="/coop-logo-full.png" alt="" width={32} height={32} />
+      </div>
+      <h2 className="text-lg font-semibold">{title}</h2>
+      {body && <p className="text-muted text-sm mt-1 max-w-sm mx-auto">{body}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
