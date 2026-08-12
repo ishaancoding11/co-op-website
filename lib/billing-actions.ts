@@ -104,10 +104,18 @@ export async function startSubscriptionCheckout(prev: unknown, formData: FormDat
       // fires (or ever, for someone who never matches).
       ...(trialEligible ? { trial_period_days: 365 } : {}),
     },
+    // Overrides the account's Adaptive Pricing dashboard setting for this
+    // session specifically — without this, Checkout auto-converts to the
+    // buyer's local currency (with a currency toggle) regardless of what the
+    // Price object itself is denominated in. Every price here is USD only.
+    adaptive_pricing: { enabled: false },
     // Shown directly under Stripe's own pay button — the moment of highest
-    // hesitation about entering a card, so the $0-today reassurance lives
-    // right there instead of only on our own page before the redirect.
-    ...(trialEligible ? { custom_text: { submit: { message: '🔒 $0 charged today — billing starts only after your first match.' } } } : {}),
+    // hesitation about entering a card, so the $0-today reassurance (and a
+    // note defusing the "365 days free" line Checkout renders automatically
+    // from trial_period_days above, which reads as a literal year-long wait
+    // otherwise) lives right there instead of only on our own page before
+    // the redirect.
+    ...(trialEligible ? { custom_text: { submit: { message: '🔒 $0 charged today. The "365 days free" above is just a technical placeholder — you\'ll actually be charged the moment you land your first match, whenever that happens.' } } } : {}),
     success_url: `${origin}/billing?checkout=done`,
     cancel_url: `${origin}/billing`,
     allow_promotion_codes: true,
