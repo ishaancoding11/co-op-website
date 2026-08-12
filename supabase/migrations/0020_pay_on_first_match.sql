@@ -157,6 +157,18 @@ grant execute on function needs_plan_setup(uuid) to authenticated;
 -- trial_ends_at, no more creative_ever_engaged. A 'pending' subscription
 -- means genuinely no caps; anything else (cancelled/past_due/expired/no row)
 -- fails closed, matching the old "trial ended" behavior.
+--
+-- creative_applications_used should already exist from 0018_apply_time_quota.sql
+-- — defined again here (CREATE OR REPLACE, identical body) so this migration
+-- doesn't silently depend on 0018 having actually been run.
+create or replace function creative_applications_used(p_creative uuid) returns integer
+language sql stable security definer set search_path = public as $$
+  select count(*)::integer from matches
+  where creative_id = p_creative and source = 'job_apply' and creative_action = 'liked'
+    and created_at >= current_quota_month()
+    and created_at < current_quota_month() + interval '1 month';
+$$;
+
 create or replace function creative_can_apply(p_creative uuid)
 returns boolean language plpgsql stable security definer set search_path = public as $$
 declare sub_status subscription_status; plan subscription_plan; cap integer;
@@ -232,6 +244,13 @@ begin
 end;
 $$;
 
+-- The trigger binding itself should already exist from 0018 too — CREATE
+-- TRIGGER has no IF NOT EXISTS, so drop-then-create makes this safe to run
+-- whether or not 0018 actually ran on this database.
+drop trigger if exists matches_application_quota_guard_trg on matches;
+create trigger matches_application_quota_guard_trg before insert or update on matches
+  for each row execute function matches_application_quota_guard();
+
 create or replace function agreements_quota_guard() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare origin_source match_source;
@@ -267,6 +286,13 @@ end;
 $$;
 
 -- ===== UI read helpers =====
+-- Postgres won't let CREATE OR REPLACE change a function's OUT-parameter
+-- shape (the old versions returned trialing/trial_ends_at instead of
+-- pending/pending_since/current_period_start/needs_plan_setup) — has to be
+-- dropped first.
+drop function if exists my_creative_quota();
+drop function if exists my_business_quota();
+
 -- trialing/trial_ends_at replaced by pending/pending_since; needs_plan_setup
 -- surfaced so lib/actions.ts can give the pre-migration-gap error before
 -- even attempting the write, same as it already does for quota.
@@ -377,8 +403,9 @@ begin
 end;
 $$;
 
+revoke all on function creative_applications_used(uuid) from public, anon;
 grant execute on function
-  creative_can_apply(uuid), creative_can_accept(uuid), business_can_post(uuid),
+  creative_applications_used(uuid), creative_can_apply(uuid), creative_can_accept(uuid), business_can_post(uuid),
   my_creative_quota(), my_business_quota()
 to authenticated;
 
@@ -387,6 +414,9 @@ alter table creative_profiles drop column if exists trial_ends_at;
 alter table business_profiles drop column if exists trial_ends_at;
 
 -- ===== Admin billing list: report pending/active state instead of trial =====
+-- Same OUT-shape restriction as above — drop before recreating with the new
+-- column set (trial_ends_at replaced by pending_since, column order changed).
+drop function if exists admin_subscriptions(text, int, int);
 create or replace function admin_subscriptions(p_search text default null, p_limit int default 50, p_offset int default 0)
 returns table (
   user_id uuid, display_name text, kind text, plan subscription_plan,
