@@ -17,8 +17,8 @@ export default async function CreativePlanOnboarding() {
   return (
     <div className="py-10 max-w-3xl mx-auto">
       <h1 className="font-display text-3xl">Choose your plan</h1>
-      <p className="text-muted text-sm mt-1">
-        Pick a plan and add a card to finish setting up your profile — you won&rsquo;t be charged until your first match.
+      <p className="text-muted text-sm mt-1 font-bold">
+        Pick your plan below. We&rsquo;ll save your payment info now, but you won&rsquo;t be charged anything until you land your first match. Browse and apply freely in the meantime — it&rsquo;s completely free until it actually works for you.
       </p>
       <div className="grid gap-4 mt-6 sm:grid-cols-2">
         {plans.map(plan => {

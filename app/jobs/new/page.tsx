@@ -4,7 +4,7 @@ import { Card, LinkButton } from '@/components/ui';
 import { JobForm } from './job-form';
 
 export default async function NewJob() {
-  const { userId, business } = await getViewer();
+  const { userId, business, supabase } = await getViewer();
   if (!userId) redirect('/login?role=business');
   if (!business) redirect('/onboarding/business');
 
@@ -21,11 +21,13 @@ export default async function NewJob() {
     );
   }
 
+  const { data: quota } = (await supabase.rpc('my_business_quota').maybeSingle()) as { data: { pending: boolean } | null };
+
   return (
     <div className="py-10 max-w-xl mx-auto">
       <h1 className="font-display text-3xl">Post a job</h1>
       <p className="text-muted text-sm mt-1">Structured and specific gets the best applications.</p>
-      <Card className="p-6 mt-6"><JobForm defaultLocation={business.neighborhood} /></Card>
+      <Card className="p-6 mt-6"><JobForm defaultLocation={business.neighborhood} pendingBilling={!!quota?.pending} /></Card>
     </div>
   );
 }

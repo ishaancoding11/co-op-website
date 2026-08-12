@@ -6,7 +6,7 @@ import { applyToJob } from '@/lib/actions';
 import { inputCls } from '@/components/ui';
 import type { PortfolioItem } from '@/lib/types';
 
-export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; businessId: string; portfolio: PortfolioItem[] }) {
+export function ApplyForm({ jobId, businessId, portfolio, pendingBilling }: { jobId: string; businessId: string; portfolio: PortfolioItem[]; pendingBilling: boolean }) {
   const [state, action, pending] = useActionState(applyToJob, {});
   const [picked, setPicked] = useState<string[]>(portfolio.filter(p => p.is_favorite).map(p => p.id));
   const toggle = (pid: string) => setPicked(p => p.includes(pid) ? p.filter(x => x !== pid) : [...p, pid]);
@@ -52,6 +52,11 @@ export function ApplyForm({ jobId, businessId, portfolio }: { jobId: string; bus
           {state.error} <Link href="/billing" className="underline underline-offset-2 font-medium">Go to Billing</Link>
         </p>
       ) : state?.error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-2.5">{state.error}</p>}
+      {pendingBilling && (
+        <p className="text-xs text-sea bg-sea-soft rounded-xl px-4 py-2.5">
+          Applying is free right now — you&rsquo;re on the no-charge plan until your first match, so apply to as many jobs as you like.
+        </p>
+      )}
       <button disabled={pending} className="w-full rounded-full bg-foreground text-background py-3 text-sm font-medium hover:opacity-85 disabled:opacity-40">
         {pending ? 'Sending…' : 'Apply'}
       </button>

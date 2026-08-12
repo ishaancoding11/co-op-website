@@ -104,6 +104,10 @@ export async function startSubscriptionCheckout(prev: unknown, formData: FormDat
       // fires (or ever, for someone who never matches).
       ...(trialEligible ? { trial_period_days: 365 } : {}),
     },
+    // Shown directly under Stripe's own pay button — the moment of highest
+    // hesitation about entering a card, so the $0-today reassurance lives
+    // right there instead of only on our own page before the redirect.
+    ...(trialEligible ? { custom_text: { submit: { message: '🔒 $0 charged today — billing starts only after your first match.' } } } : {}),
     success_url: `${origin}/billing?checkout=done`,
     cancel_url: `${origin}/billing`,
     allow_promotion_codes: true,

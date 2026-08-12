@@ -28,8 +28,8 @@ export default async function Landing() {
         <p className="text-muted mt-5 md:text-lg">
           Co-op connects small businesses with nearby freelance creatives for photos, reels, branding, murals, and live music. Personal, quick, and easy — and Co-op never takes a cut.
         </p>
-        <p className="text-accent font-medium mt-4 text-sm">
-          Subscribe now — you won&rsquo;t be charged until your first match.
+        <p className="text-accent font-bold mt-4 text-sm">
+          Subscribe free today — you won&rsquo;t pay a cent until you land your first match. No risk, no upfront cost, just real work when it happens.
         </p>
         <p className="text-sm text-muted mt-2">
           Already have an account? <Link href="/login?mode=login" className="text-foreground font-medium underline underline-offset-2">Log in</Link>

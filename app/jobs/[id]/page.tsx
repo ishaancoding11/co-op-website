@@ -24,6 +24,7 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
 
   let myMatch = null;
   let myPortfolio: PortfolioItem[] = [];
+  let pendingBilling = false;
   if (userId && creative) {
     const [{ data: m }, { data: pf }] = await Promise.all([
       supabase.from('matches').select('*').eq('creative_id', userId).eq('job_id', id).maybeSingle(),
@@ -31,6 +32,8 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
     ]);
     myMatch = m;
     myPortfolio = ((pf ?? []) as PortfolioItem[]).slice().sort((a, b) => Number(b.is_favorite ?? false) - Number(a.is_favorite ?? false));
+    const { data: quota } = (await supabase.rpc('my_creative_quota').maybeSingle()) as { data: { pending: boolean } | null };
+    pendingBilling = !!quota?.pending;
   }
   const { data: fav } = userId
     ? await supabase.from('favorites').select('id').eq('user_id', userId).eq('saved_job_id', id).maybeSingle()
@@ -86,7 +89,7 @@ export default async function JobDetail({ params }: { params: Promise<{ id: stri
             <>
               <h2 className="font-display text-2xl mb-3">Apply</h2>
               <Card className="p-6">
-                <ApplyForm jobId={id} businessId={j.business_id} portfolio={myPortfolio} />
+                <ApplyForm jobId={id} businessId={j.business_id} portfolio={myPortfolio} pendingBilling={pendingBilling} />
               </Card>
               <div className="flex gap-4 mt-3 items-center">
                 <form action={creativePassJob.bind(null, id, j.business_id)}>

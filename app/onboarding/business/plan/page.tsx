@@ -18,8 +18,8 @@ export default async function BusinessPlanOnboarding() {
   return (
     <div className="py-10 max-w-xl mx-auto">
       <h1 className="font-display text-3xl">Choose your plan</h1>
-      <p className="text-muted text-sm mt-1">
-        Add a card to finish setting up your business — you won&rsquo;t be charged until your first match.
+      <p className="text-muted text-sm mt-1 font-bold">
+        Pick your plan below. We&rsquo;ll save your payment info now, but you won&rsquo;t be charged anything until you get matched with your first creative. Browse and post freely in the meantime — it&rsquo;s completely free until it actually works for you.
       </p>
       <div className="mt-6">
         <PlanCard plan={plan} label={PLAN_LABELS[plan]} blurb={p.blurb} features={p.features}
