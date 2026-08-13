@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getStaffRole, getViewer } from '@/lib/auth';
 import { Avatar, IconBell, IconGear, IconHeart, IconPlus, IconSearch } from './ui';
-import { ALL_CATEGORIES, CATEGORY_LABELS } from '@/lib/types';
 import { SignupGate } from './signup-gate';
 import { GetStartedButton } from './get-started-button';
 import { ModerationListener } from './moderation-listener';
@@ -193,6 +192,10 @@ export async function Nav() {
               <button className="px-4 bg-foreground text-background hover:opacity-85 flex items-center" aria-label="Search"><IconSearch /></button>
             </div>
           </form>
+          <div className="hidden sm:flex items-center gap-1">
+            <Link href="/browse?view=gallery" className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">Gallery</Link>
+            <Link href="/browse?view=list" className="rounded-full px-3 py-1.5 text-sm font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">Browse creatives</Link>
+          </div>
           <div className="flex items-center gap-1 ml-auto">
             <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 mr-2">
               {[...creativeTabs, { href: '/billing', label: t('nav.billing') }].map(tab => (
@@ -205,17 +208,6 @@ export async function Nav() {
             <UtilityIcons unread={unread} profileHref={profileHref} displayName={displayName} avatarUrl={avatarUrl} />
           </div>
         </div>
-        <nav aria-label="Job categories" className="border-t border-line/70">
-          <div className="mx-auto max-w-6xl px-4 flex gap-1 overflow-x-auto py-1.5 text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href="/jobs" className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50">{t('nav.all')}</Link>
-            {ALL_CATEGORIES.map(c => (
-              <Link key={c} href={`/jobs?category=${c}`}
-                className="shrink-0 rounded-full px-3 py-1 font-medium text-muted hover:text-foreground hover:bg-line/50 whitespace-nowrap">
-                {CATEGORY_LABELS[c]}
-              </Link>
-            ))}
-          </div>
-        </nav>
       </header>
       <nav aria-label="Primary mobile" className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-line pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around">
